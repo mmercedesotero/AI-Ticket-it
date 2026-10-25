@@ -1,0 +1,9 @@
+const EstadoCompra = Object.freeze({
+  PENDIENTE_PAGO: "PENDIENTE_PAGO",
+  CONFIRMADA: "CONFIRMADA",
+  UTILIZADA: "UTILIZADA",
+  CANCELADA: "CANCELADA",
+  REEMBOLSADA: "REEMBOLSADA"
+});
+
+module.exports = EstadoCompra;
