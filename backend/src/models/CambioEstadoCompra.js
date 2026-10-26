@@ -1,5 +1,6 @@
 class CambioEstadoCompra {
-  constructor(compra, estado, quien, fechaHora = new Date()) {
+  constructor(id, compra, estado, quien, fechaHora = new Date()) {
+    this.id = id;
     this.compra = compra;
     this.estado = estado;
     this.quien = quien;

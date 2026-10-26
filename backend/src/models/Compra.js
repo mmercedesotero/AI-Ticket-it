@@ -1,23 +1,23 @@
-const EstadoCompra = require("./estadoCompra");
+const EstadoCompra = require("./EstadoCompra");
 
 class Compra {
   constructor(
     id,
     comprador,
     evento,
-    tipoDeEntrada,
+    tipoEntrada,
     cantidad,
     total,
-    mensajes = [],
-    estado = EstadoCompra.PENDIENTE_PAGO
+    estado = EstadoCompra.PENDIENTE_PAGO,
+    mensajes = []
   ) {
     this.id = id;
     this.comprador = comprador;
     this.evento = evento;
-    this.estado = estado;
-    this.tipoDeEntrada = tipoDeEntrada;
+    this.tipoEntrada = tipoEntrada;
     this.cantidad = cantidad;
     this.total = total;
+    this.estado = estado;
     this.mensajes = mensajes;
   }
 

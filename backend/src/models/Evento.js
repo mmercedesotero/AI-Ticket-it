@@ -4,25 +4,26 @@ class Evento {
     nombre,
     fecha,
     descripcion,
-    entrada = [],
     categoria = null,
     tiposEntrada = [],
     multimedia = [],
-    organizador = null,
+    organizador = null
   ) {
     this.id = id;
     this.nombre = nombre;
     this.fecha = fecha;
     this.descripcion = descripcion;
-    this.entrada = entrada;
     this.categoria = categoria;
     this.tiposEntrada = tiposEntrada;
     this.multimedia = multimedia;
     this.organizador = organizador;
+  }
 
+  tuPrecioEstaEntre(min, max) {
+    return this.tiposEntrada.some(
+      (entrada) => entrada.precio >= min && entrada.precio <= max
+    );
   }
 }
-
- // tuPrecioEstaEntre(min, max)
 
 module.exports = Evento;

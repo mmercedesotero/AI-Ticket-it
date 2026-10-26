@@ -1,4 +1,4 @@
-const Evento = require("../models/evento");
+const Evento = require("../models/Evento");
 
 class EventoRepository {
   constructor() {

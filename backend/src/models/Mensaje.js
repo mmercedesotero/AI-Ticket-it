@@ -1,9 +1,9 @@
 class Mensaje {
-  constructor(id, usuario, mensaje, enviado = new Date()) {
+  constructor(id, autor, texto, fechaHora = new Date()) {
     this.id = id;
-    this.usuario = usuario;
-    this.mensaje = mensaje;
-    this.enviado = enviado;
+    this.autor = autor;
+    this.texto = texto;
+    this.fechaHora = fechaHora;
   }
 }
 

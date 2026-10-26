@@ -1,4 +1,4 @@
-const Evento = require("../models/evento");
+const Evento = require("../models/Evento");
 
 class EventoService {
   constructor(eventoRepository) {
@@ -19,12 +19,10 @@ class EventoService {
       datos.nombre,
       datos.fecha,
       datos.descripcion,
-      datos.entrada,
       datos.categoria,
       datos.tiposEntrada,
       datos.multimedia,
-      datos.organizador,
-      datos.tuPrecioEstaEntre
+      datos.organizador
     );
 
     return this.eventoRepository.save(evento);

@@ -3,7 +3,6 @@ class Organizador {
     this.id = id;
     this.nombre = nombre;
     this.eventos = [];
-    this.ventas = [];
   }
 }
 
