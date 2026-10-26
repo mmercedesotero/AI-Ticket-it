@@ -2,8 +2,8 @@ const express = require("express");
 const EventoController = require("../controllers/EventoController");
 const EventoRepository = require("../repositories/EventoRepository");
 const EventoService = require("../services/EventoService");
+const { eventoRepository } = require("../container");
 
-const eventoRepository = new EventoRepository();
 const eventoService = new EventoService(eventoRepository);
 const controllers = new EventoController(eventoService);
 
