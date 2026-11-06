@@ -9,7 +9,13 @@ class CompraController {
     this.eliminar = this.eliminar.bind(this);
   }
 
-  obtenerTodos(req, res) {
+    obtenerTodos(req, res) {
+    const { usuarioId } = req.query;
+
+    if (usuarioId) {
+      return res.json(this.compraService.obtenerPorUsuario(usuarioId));
+    }
+
     res.json(this.compraService.obtenerTodos());
   }
 
@@ -47,6 +53,7 @@ class CompraController {
 
     res.status(204).end();
   }
+
 }
 
 module.exports = CompraController;

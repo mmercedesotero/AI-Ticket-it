@@ -1,6 +1,7 @@
 const Compra = require("../models/Compra");
-const NotFoundError = require("../errors/NotFoundError")
-const ValidationError = require("../errors/ValidationError")
+const NotFoundError = require("../errors/NotFoundError");
+const ValidationError = require("../errors/ValidationError");
+const EstadoCompra = require("../models/EstadoCompra");
 
 class CompraService {
   constructor(compraRepository, usuarioRepository, eventoRepository) {
@@ -62,6 +63,21 @@ class CompraService {
     entrada.cupoDisponible -= cantidad;
 
     return this.compraRepository.save(compra);
+  }
+  obtenerPorUsuario(usuarioId) {
+    const usuario = this.usuarioRepository.findById(usuarioId);
+    if (!usuario) throw new NotFoundError("Usuario no encontrado");
+
+    return this.compraRepository
+      .findAll()
+      .filter((compra) => String(compra.comprador.id) === String(usuarioId))
+      .map((compra) => ({
+        ...compra,
+        diasParaEvento:
+          compra.estado === EstadoCompra.CONFIRMADA
+            ? compra.diasParaElEvento()
+            : null,
+      }));
   }
 }
 
