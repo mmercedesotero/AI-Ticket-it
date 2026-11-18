@@ -47,6 +47,8 @@ class CompraService {
     const evento = this.eventoRepository.findById(eventoId);
     if (!evento) throw new NotFoundError("Evento no encontrado");
 
+    if (evento.yaSeRealizo()) throw new ValidationError("El evento ya se realizó");
+
     const entrada = evento.tiposEntrada.find(
       (tipo) => String(tipo.id) === String(entradaId)
     );
@@ -150,6 +152,23 @@ class CompraService {
       fuePagada ? EstadoCompra.REEMBOLSADA : EstadoCompra.CANCELADA
     );
     compra.tipoEntrada.cupoDisponible += compra.cantidad;
+
+    return compra;
+  }
+
+  pagarCompra(id) {
+    const compra = this.compraRepository.findById(id);
+    if (!compra) throw new NotFoundError("Compra no encontrada");
+
+    if (compra.estado !== EstadoCompra.PENDIENTE_PAGO)
+      throw new ValidationError("Solo se puede pagar una compra pendiente de pago");
+
+    if (compra.evento.yaSeRealizo())
+      throw new ValidationError(
+        "No se puede pagar una compra de un evento que ya se realizó"
+      );
+
+    compra.actualizarEstado(EstadoCompra.CONFIRMADA);
 
     return compra;
   }

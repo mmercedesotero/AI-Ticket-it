@@ -28,9 +28,9 @@ function cargarDatos() {
       entradas: [["Platea", 35000, "Sala", 80], ["Pullman", 25000, "Balcon", 60]] },
     { nombre: "Lollapalooza", fecha: "2027-03-26", descripcion: "Tres dias de musica", categoria: festival, organizador: liveNation,
       entradas: [["Dia 1", 120000, "Campo", 500], ["Pase 3 dias", 300000, "Campo", 100]] },
-    { nombre: "Noche de Rock", fecha: "2025-06-01", descripcion: "Show ya realizado", categoria: recital, organizador: teatroBA,
+    { nombre: "Noche de Rock", fecha: "2027-06-01", descripcion: "Show ya realizado", categoria: recital, organizador: teatroBA,
       entradas: [["General", 20000, "Campo", 150]] },
-    { nombre: "Cosquin Rock 2025", fecha: "2025-02-15", descripcion: "Festival ya realizado", categoria: festival, organizador: liveNation,
+    { nombre: "Cosquin Rock 2025", fecha: "2027-02-15", descripcion: "Festival ya realizado", categoria: festival, organizador: liveNation,
       entradas: [["General", 50000, "Campo", 300]] },
   ];
 
@@ -71,6 +71,9 @@ function cargarDatos() {
   comprar(mer, hamlet, 1, 2, EstadoCompra.CONFIRMADA);
   comprar(tomas, nocheRock, 1, 2, EstadoCompra.UTILIZADA);
   comprar(mer, nocheRock, 1, 1, EstadoCompra.CONFIRMADA);
+
+  nocheRock.fecha = "2025-06-01";
+  cosquin.fecha = "2025-02-15";
   
 }
 

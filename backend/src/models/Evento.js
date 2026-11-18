@@ -25,6 +25,12 @@ class Evento {
     );
   }
 
+  yaSeRealizo() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    return new Date(`${this.fecha}T00:00:00`) < hoy;
+  }
   precioDesde() {
     if (this.tiposEntrada.length === 0) return null;
     return Math.min(...this.tiposEntrada.map((entrada) => entrada.precio));
