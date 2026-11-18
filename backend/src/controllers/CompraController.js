@@ -10,6 +10,7 @@ class CompraController {
     this.cancelar = this.cancelar.bind(this);
     this.obtenerMensajes = this.obtenerMensajes.bind(this);
     this.enviarMensaje = this.enviarMensaje.bind(this);
+    this.pagar = this.pagar.bind(this);
   }
   
   obtenerTodos(req, res) {
@@ -63,6 +64,11 @@ class CompraController {
 
   cancelar(req, res) {
     const compra = this.compraService.cancelarCompra(req.params.id);
+    res.json(compra);
+  }
+  
+  pagar(req, res) {
+    const compra = this.compraService.pagarCompra(req.params.id);
     res.json(compra);
   }
 

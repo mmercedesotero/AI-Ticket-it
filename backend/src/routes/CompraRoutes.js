@@ -15,5 +15,6 @@ router.post("/", controllers.crear);
 router.put("/:id/cancelar", controllers.cancelar);
 router.get("/:id/mensajes", controllers.obtenerMensajes);
 router.post("/:id/mensajes", controllers.enviarMensaje);
+router.put("/:id/pagar", controllers.pagar);
 
 module.exports = router;
