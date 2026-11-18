@@ -5,8 +5,8 @@ const Evento = require("./models/Evento");
 const Entrada = require("./models/Entrada");
 const EstadoCompra = require("./models/EstadoCompra");
 const CompraService = require("./services/CompraService");
-const { usuarioRepository, eventoRepository, organizadorRepository, compraRepository, categoriaRepository } = require("./container");
-
+const { usuarioRepository, eventoRepository, organizadorRepository, compraRepository, categoriaRepository, reseniaRepository } = require("./container");
+const ReseniaService = require("./services/ReseniaService");
 
 function cargarDatos() {
   const ana = usuarioRepository.save(new Usuario(undefined, "Ana", "Perez"));
@@ -30,6 +30,8 @@ function cargarDatos() {
       entradas: [["Dia 1", 120000, "Campo", 500], ["Pase 3 dias", 300000, "Campo", 100]] },
     { nombre: "Noche de Rock", fecha: "2025-06-01", descripcion: "Show ya realizado", categoria: recital, organizador: teatroBA,
       entradas: [["General", 20000, "Campo", 150]] },
+    { nombre: "Cosquin Rock 2025", fecha: "2025-02-15", descripcion: "Festival ya realizado", categoria: festival, organizador: liveNation,
+      entradas: [["General", 50000, "Campo", 300]] },
   ];
 
   const eventos = eventosIniciales.map((datos) => {
@@ -44,7 +46,7 @@ function cargarDatos() {
     datos.organizador.eventos.push(evento);
     return evento;
   });
-  const [coldplay, jazz, hamlet, lolla, nocheRock] = eventos;
+  const [coldplay, jazz, hamlet, lolla, nocheRock, cosquin ] = eventos;
 
   const compraService = new CompraService(compraRepository, usuarioRepository, eventoRepository);
   const comprar = (usuario, evento, entradaId, cantidad, estado) => {
@@ -54,13 +56,23 @@ function cargarDatos() {
     if (estado) compra.actualizarEstado(estado);
     return compra;
   };
+  
+  const compraTomas = comprar(tomas, nocheRock, 1, 2, EstadoCompra.UTILIZADA);
+  const compraAna = comprar(ana, cosquin, 1, 2, EstadoCompra.UTILIZADA);
+  const compraMer = comprar(mer, cosquin, 1, 1, EstadoCompra.UTILIZADA);
 
+  const reseniaService = new ReseniaService(reseniaRepository, compraRepository, organizadorRepository);
+  reseniaService.crear({ compraId: compraAna.id, puntuacion: 5, detalle: "Increible organizacion" });
+  reseniaService.crear({ compraId: compraMer.id, puntuacion: 4, detalle: "Muy buen festival" });
+  reseniaService.crear({ compraId: compraTomas.id, puntuacion: 3, detalle: "El sonido podia mejorar" });
+  
   comprar(ana, coldplay, 1, 2, EstadoCompra.CONFIRMADA);
   comprar(mer, coldplay, 1, 1);
   comprar(ana, jazz, 2, 1, EstadoCompra.CONFIRMADA);
   comprar(mer, hamlet, 1, 2, EstadoCompra.CONFIRMADA);
   comprar(tomas, nocheRock, 1, 2, EstadoCompra.UTILIZADA);
   comprar(mer, nocheRock, 1, 1, EstadoCompra.CONFIRMADA);
+  
 }
 
 module.exports = cargarDatos;

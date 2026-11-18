@@ -1,9 +1,9 @@
 const express = require("express");
 
 const app = require("./src/app");
-const cargarDatosIniciales = require("./src/datosIniciales");
+const cargarSeeds = require("./src/seeds");
 
-cargarDatosIniciales();
+cargarSeeds();
 
 app.listen(3000, () => {
   console.log("Servidor funcionando");

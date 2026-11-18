@@ -2,9 +2,9 @@ const express = require("express");
 const EventoController = require("../controllers/EventoController");
 const EventoRepository = require("../repositories/EventoRepository");
 const EventoService = require("../services/EventoService");
-const { eventoRepository } = require("../container");
+const { eventoRepository, reseniaRepository  } = require("../container");
 
-const eventoService = new EventoService(eventoRepository);
+const eventoService = new EventoService(eventoRepository, reseniaRepository);
 const controllers = new EventoController(eventoService);
 
 const router = express.Router();

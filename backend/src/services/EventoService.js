@@ -8,8 +8,9 @@ const normalizar = (texto) =>
     .replace(/[\u0300-\u036f]/g, "");
 
 class EventoService {
-  constructor(eventoRepository) {
+  constructor(eventoRepository, reseniaRepository) {
     this.eventoRepository = eventoRepository;
+    this.reseniaRepository = reseniaRepository;
   }
 
   obtenerTodos() {
@@ -18,6 +19,22 @@ class EventoService {
 
   obtenerPorId(id) {
     return this.eventoRepository.findById(id);
+  }
+
+  puntajeDelOrganizador(evento) {
+    if (!evento.organizador) return null;
+
+    const resenias = this.reseniaRepository
+      .findAll()
+      .filter(
+        (r) =>
+          r.evento.organizador &&
+          String(r.evento.organizador.id) === String(evento.organizador.id)
+      );
+    if (resenias.length === 0) return null;
+
+    const suma = resenias.reduce((total, r) => total + r.puntuacion, 0);
+    return suma / resenias.length;
   }
 
   buscar({ texto, categoriaId, precioMin, precioMax, orden, direccion } = {}) {
@@ -53,10 +70,14 @@ class EventoService {
       precio: (a, b) =>
         (a.precioDesde() ?? Infinity) - (b.precioDesde() ?? Infinity),
       fecha: (a, b) => a.fecha.localeCompare(b.fecha),
+      puntaje: (a, b) =>
+        (this.puntajeDelOrganizador(a) ?? 0) -
+        (this.puntajeDelOrganizador(b) ?? 0),
     };
 
     const comparar = criterios[orden];
-    if (!comparar) throw new ValidationError("Orden no válido: usá precio o fecha");
+    if (!comparar)
+      throw new ValidationError("Orden no válido: usá precio, fecha o puntaje");
 
     const ordenados = [...eventos].sort(comparar);
     return direccion === "desc" ? ordenados.reverse() : ordenados;
