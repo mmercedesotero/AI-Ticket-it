@@ -79,6 +79,62 @@ class CompraService {
             : null,
       }));
   }
+
+  obtenerPorEvento(eventoId) {
+    const evento = this.eventoRepository.findById(eventoId);
+    if (!evento) throw new NotFoundError("Evento no encontrado");
+
+    const compras = this.compraRepository
+      .findAll()
+      .filter((compra) => String(compra.evento.id) === String(eventoId))
+      .map((compra) => ({
+        id: compra.id,
+        comprador: `${compra.comprador.nombre} ${compra.comprador.apellido}`,
+        tipoEntrada: compra.tipoEntrada.nombre,
+        cantidad: compra.cantidad,
+        total: compra.total,
+        estado: compra.estado,
+      }));
+
+    const entradasDisponibles = evento.tiposEntrada.map((tipo) => ({
+      id: tipo.id,
+      nombre: tipo.nombre,
+      cupoDisponible: tipo.cupoDisponible,
+    }));
+
+    return {
+      evento: { id: evento.id, nombre: evento.nombre },
+      compras,
+      entradasDisponibles,
+    };
+  }
+
+  cancelarCompra(id) {
+    const compra = this.compraRepository.findById(id);
+    if (!compra) throw new NotFoundError("Compra no encontrada");
+
+    if (compra.estado === EstadoCompra.UTILIZADA)
+      throw new ValidationError("No se puede cancelar una compra ya utilizada");
+
+    if (
+      compra.estado === EstadoCompra.CANCELADA ||
+      compra.estado === EstadoCompra.REEMBOLSADA
+    )
+      throw new ValidationError("La compra ya fue cancelada");
+
+    if (compra.diasParaElEvento() < 0)
+      throw new ValidationError(
+        "No se puede cancelar una compra de un evento que ya se realizó"
+      );
+
+    const fuePagada = compra.estado === EstadoCompra.CONFIRMADA;
+    compra.actualizarEstado(
+      fuePagada ? EstadoCompra.REEMBOLSADA : EstadoCompra.CANCELADA
+    );
+    compra.tipoEntrada.cupoDisponible += compra.cantidad;
+
+    return compra;
+  }
 }
 
 module.exports = CompraService;

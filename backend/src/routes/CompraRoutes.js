@@ -14,5 +14,6 @@ router.get("/:id", controllers.obtenerPorId);
 router.post("/", controllers.crear);
 router.put("/:id", controllers.actualizar);
 router.delete("/:id", controllers.eliminar);
+router.put("/:id/cancelar", controllers.cancelar);
 
 module.exports = router;
