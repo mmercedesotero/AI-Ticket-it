@@ -28,6 +28,15 @@ class Compra {
 
     this.estado = estadoCompra;
   }
+  diasParaElEvento() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaEvento = new Date(`${this.evento.fecha}T00:00:00`);
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    return Math.round((fechaEvento - hoy) / MS_POR_DIA);
+  }
 }
 
 module.exports = Compra;

@@ -2,20 +2,7 @@ const Evento = require("../models/Evento");
 
 class EventoRepository {
   constructor() {
-    this.eventos = [
-      new Evento(
-        1,
-        "Coldplay",
-        "2027-01-10",
-        "Concierto",
-      ),
-      new Evento(
-        2,
-        "Taylor Swift",
-        "2027-02-15",
-        "Show"
-      )
-    ];
+    this.eventos = [];
 }
 
   findAll() {
