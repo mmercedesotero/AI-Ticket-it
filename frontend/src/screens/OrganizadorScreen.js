@@ -22,6 +22,11 @@ export default function OrganizadorScreen({ navigation }) {
       data={eventos}
       keyExtractor={(evento) => String(evento.id)}
       contentContainerStyle={styles.lista}
+      ListHeaderComponent={
+        <Pressable style={styles.crear} onPress={() => navigation.navigate("CrearEvento")}>
+          <Text style={styles.crearTexto}>+ Crear evento</Text>
+        </Pressable>
+      }
       renderItem={({ item }) => (
         <Pressable
           style={styles.tarjeta}
@@ -39,5 +44,7 @@ const styles = StyleSheet.create({
   lista: { padding: 16 },
   tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 10 },
   nombre: { fontSize: 18, fontWeight: "600" },
+  crear: { backgroundColor: "#222", borderRadius: 10, padding: 12, alignItems: "center", marginBottom: 12 },
+  crearTexto: { color: "#fff", fontWeight: "bold" },
   centro: { marginTop: 100, textAlign: "center" },
 });

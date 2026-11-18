@@ -8,6 +8,7 @@ import ChatScreen from "./src/screens/ChatScreen";
 import ResenaScreen from "./src/screens/ResenaScreen";
 import OrganizadorScreen from "./src/screens/OrganizadorScreen";
 import ComprasEventoScreen from "./src/screens/ComprasEventoScreen";
+import CrearEventoScreen from "./src/screens/CrearEventoScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,6 +32,7 @@ export default function App() {
         <Stack.Screen name="Chat" component={ChatScreen} options={{ title: "Chat" }} />
         <Stack.Screen name="Resena" component={ResenaScreen} options={{ title: "Reseña" }} />
         <Stack.Screen name="ComprasEvento" component={ComprasEventoScreen} options={{ title: "Compras del evento" }} />
+        <Stack.Screen name="CrearEvento" component={CrearEventoScreen} options={{ title: "Crear evento" }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
