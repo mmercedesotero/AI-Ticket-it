@@ -12,8 +12,6 @@ const router = express.Router();
 router.get("/", controllers.obtenerTodos);
 router.get("/:id", controllers.obtenerPorId);
 router.post("/", controllers.crear);
-router.put("/:id", controllers.actualizar);
-router.delete("/:id", controllers.eliminar);
 router.put("/:id/cancelar", controllers.cancelar);
 router.get("/:id/mensajes", controllers.obtenerMensajes);
 router.post("/:id/mensajes", controllers.enviarMensaje);

@@ -1,4 +1,5 @@
 const Usuario = require("../models/Usuario");
+const pick = require("../utils/pick");
 
 class UsuarioService {
   constructor(usuarioRepository) {
@@ -19,7 +20,7 @@ class UsuarioService {
   }
 
   actualizar(id, datos) {
-    return this.usuarioRepository.update(id, datos);
+    return this.usuarioRepository.update(id, pick(datos, ["nombre", "apellido"]));
   }
 
   eliminar(id) {

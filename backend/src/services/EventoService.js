@@ -1,5 +1,6 @@
 const Evento = require("../models/Evento");
 const ValidationError = require("../errors/ValidationError");
+const pick = require("../utils/pick");
 
 const normalizar = (texto) =>
   String(texto)
@@ -99,7 +100,10 @@ class EventoService {
   }
 
   actualizar(id, datos) {
-    return this.eventoRepository.update(id, datos);
+    return this.eventoRepository.update(
+      id,
+      pick(datos, ["nombre", "fecha", "descripcion", "categoria", "tiposEntrada", "multimedia"])
+    );
   }
 
   eliminar(id) {

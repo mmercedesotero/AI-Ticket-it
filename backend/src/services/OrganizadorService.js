@@ -1,4 +1,5 @@
 const Organizador = require("../models/Organizador");
+const pick = require("../utils/pick");
 
 class OrganizadorService {
   constructor(organizadorRepository) {
@@ -18,9 +19,8 @@ class OrganizadorService {
 
     return this.organizadorRepository.save(organizador);
   }
-
   actualizar(id, datos) {
-    return this.organizadorRepository.update(id, datos);
+    return this.organizadorRepository.update(id, pick(datos, ["nombre"]));
   }
 
   eliminar(id) {
