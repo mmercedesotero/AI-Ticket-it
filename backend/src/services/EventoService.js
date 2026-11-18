@@ -1,6 +1,21 @@
 const Evento = require("../models/Evento");
 const ValidationError = require("../errors/ValidationError");
 const pick = require("../utils/pick");
+const Entrada = require("../models/Entrada");
+const NotFoundError = require("../errors/NotFoundError");
+
+const fechaValida = (fecha) => {
+  if (typeof fecha !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
+
+  const [anio, mes, dia] = fecha.split("-").map(Number);
+  const date = new Date(anio, mes - 1, dia);
+
+  return (
+    date.getFullYear() === anio &&
+    date.getMonth() === mes - 1 &&
+    date.getDate() === dia
+  );
+};
 
 const normalizar = (texto) =>
   String(texto)
@@ -9,9 +24,16 @@ const normalizar = (texto) =>
     .replace(/[\u0300-\u036f]/g, "");
 
 class EventoService {
-  constructor(eventoRepository, reseniaRepository) {
+  constructor(
+    eventoRepository,
+    reseniaRepository,
+    categoriaRepository,
+    organizadorRepository
+  ) {
     this.eventoRepository = eventoRepository;
     this.reseniaRepository = reseniaRepository;
+    this.categoriaRepository = categoriaRepository;
+    this.organizadorRepository = organizadorRepository;
   }
 
   obtenerTodos() {
@@ -85,18 +107,57 @@ class EventoService {
   }
 
   crear(datos = {}) {
+    const { nombre, fecha, descripcion, categoriaId, organizadorId, tiposEntrada } = datos;
+
+    if (typeof nombre !== "string" || nombre.trim() === "")
+      throw new ValidationError("El nombre es obligatorio");
+
+    if (!fechaValida(fecha))
+      throw new ValidationError("La fecha debe ser válida y tener formato AAAA-MM-DD");
+
+    if (!Array.isArray(tiposEntrada) || tiposEntrada.length === 0)
+      throw new ValidationError("El evento necesita al menos un tipo de entrada");
+
+    const entradas = tiposEntrada.map((tipo, i) => {
+      const { nombre, precio, ubicacion, cupoDisponible } = tipo ?? {};
+
+      if (typeof nombre !== "string" || nombre.trim() === "")
+        throw new ValidationError(`La entrada ${i + 1} necesita un nombre`);
+      if (typeof precio !== "number")
+        throw new ValidationError(`El precio de "${nombre}" debe ser un número, sin comillas`);
+      if (precio < 0)
+        throw new ValidationError(`El precio de "${nombre}" no puede ser negativo`);
+      if (typeof cupoDisponible !== "number")
+        throw new ValidationError(`El cupo de "${nombre}" debe ser un número, sin comillas`);
+      if (!Number.isInteger(cupoDisponible) || cupoDisponible <= 0)
+        throw new ValidationError(`El cupo de "${nombre}" debe ser un entero mayor a 0`);
+
+      return new Entrada(i + 1, nombre.trim(), precio, ubicacion, cupoDisponible);
+    });
+
+    const categoria = this.categoriaRepository.findById(categoriaId);
+    if (!categoria) throw new NotFoundError("Categoría no encontrada");
+
+    const organizador = this.organizadorRepository.findById(organizadorId);
+    if (!organizador) throw new NotFoundError("Organizador no encontrado");
+
     const evento = new Evento(
       undefined,
-      datos.nombre,
-      datos.fecha,
-      datos.descripcion,
-      datos.categoria,
-      datos.tiposEntrada,
-      datos.multimedia,
-      datos.organizador
+      nombre.trim(),
+      fecha,
+      typeof descripcion === "string" ? descripcion.trim() : "",
+      categoria,
+      entradas,
+      datos.multimedia ?? [],
+      organizador
     );
+    if (evento.yaSeRealizo())
+      throw new ValidationError("La fecha del evento no puede ser pasada");
 
-    return this.eventoRepository.save(evento);
+    this.eventoRepository.save(evento);
+    organizador.eventos.push(evento);
+
+    return evento;
   }
 
   actualizar(id, datos) {
