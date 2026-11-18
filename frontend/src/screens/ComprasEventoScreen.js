@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 const COLORES = {
   PENDIENTE_PAGO: "#e0a800",
@@ -50,7 +51,7 @@ export default function ComprasEventoScreen({ route }) {
             </View>
           </View>
           <Text>
-            {compra.cantidad} × {compra.tipoEntrada} · ${compra.total}
+            {compra.cantidad} × {compra.tipoEntrada} · {formatearFecha(compra.evento.fecha)}
           </Text>
         </View>
       ))}

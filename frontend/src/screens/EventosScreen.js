@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { get } from "../api";
+import { formatearFecha, formatearPrecio, yaSeRealizo } from "../formato"
 
 const ORDENES = [
   { clave: "fecha", etiqueta: "Fecha" },
@@ -15,21 +16,32 @@ export default function EventosScreen({ navigation }) {
   const [categoriaId, setCategoriaId] = useState(null);
   const [orden, setOrden] = useState("fecha");
   const [error, setError] = useState(null);
+  const [refrescando, setRefrescando] = useState(false);
 
   useEffect(() => {
     get("/categorias").then(setCategorias).catch((e) => setError(e.message));
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams({ orden });
-    if (orden === "puntaje") params.set("direccion", "desc");
-    if (texto) params.set("texto", texto);
-    if (categoriaId) params.set("categoriaId", String(categoriaId));
+const cargar = useCallback(() => {
+  const params = new URLSearchParams({ orden });
+  if (orden === "puntaje") params.set("direccion", "desc");
+  if (texto) params.set("texto", texto);
+  if (categoriaId) params.set("categoriaId", String(categoriaId));
 
-    get(`/eventos?${params.toString()}`)
-      .then(setEventos)
-      .catch((e) => setError(e.message));
-  }, [texto, categoriaId, orden]);
+  return get(`/eventos?${params.toString()}`)
+    .then(setEventos)
+    .catch((e) => setError(e.message));
+}, [texto, categoriaId, orden]);
+
+useEffect(() => {
+  cargar();
+}, [cargar]);
+
+const refrescar = async () => {
+  setRefrescando(true);
+  await Promise.all([cargar(), new Promise((r) => setTimeout(r, 600))]);
+  setRefrescando(false);
+};
 
   const precioDesde = (evento) =>
     evento.tiposEntrada.length
@@ -64,6 +76,8 @@ export default function EventosScreen({ navigation }) {
 
       <FlatList
         data={eventos}
+        refreshing={refrescando}
+        onRefresh={refrescar}
         keyExtractor={(evento) => String(evento.id)}
         ListEmptyComponent={<Text style={styles.centro}>No hay eventos</Text>}
         renderItem={({ item }) => (
@@ -72,8 +86,9 @@ export default function EventosScreen({ navigation }) {
             onPress={() => navigation.navigate("Detalle", { id: item.id })}
           >
             <Text style={styles.nombre}>{item.nombre}</Text>
-            <Text>{item.fecha} · {item.categoria?.nombre}</Text>
-            {precioDesde(item) !== null && <Text>Desde ${precioDesde(item)}</Text>}
+            <Text>{formatearFecha(item.fecha)} · {item.categoria?.nombre}</Text>
+            {yaSeRealizo(item.fecha) && <Text style={styles.finalizado}>Finalizado</Text>}
+            {precioDesde(item) !== null && <Text>Desde {formatearPrecio(precioDesde(item))}</Text>}
           </Pressable>
         )}
       />
@@ -101,4 +116,5 @@ const styles = StyleSheet.create({
   tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 10 },
   nombre: { fontSize: 18, fontWeight: "600" },
   centro: { marginTop: 40, textAlign: "center" },
+  finalizado: { color: "#ac4343", fontWeight: "bold", marginTop: 2 },
 });

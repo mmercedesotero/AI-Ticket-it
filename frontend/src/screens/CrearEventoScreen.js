@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { enviar, get } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 const entradaVacia = () => ({ nombre: "", precio: "", ubicacion: "", cupo: "" });
 

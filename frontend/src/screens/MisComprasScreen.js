@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { enviar, get, USUARIO_ID } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 const COLORES = {
   PENDIENTE_PAGO: "#e0a800",
@@ -14,14 +15,27 @@ const COLORES = {
 export default function MisComprasScreen({ navigation }) {
   const [compras, setCompras] = useState([]);
   const [error, setError] = useState(null);
+  const [refrescando, setRefrescando] = useState(false);
 
-  const cargar = useCallback(() => {
-    get(`/compras?usuarioId=${USUARIO_ID}`)
-      .then(setCompras)
-      .catch((e) => setError(e.message));
-  }, []);
+  const cargar = useCallback(
+    () =>
+      get(`/compras?usuarioId=${USUARIO_ID}`)
+        .then(setCompras)
+        .catch((e) => setError(e.message)),
+    []
+  );
 
-  useFocusEffect(cargar);
+  useFocusEffect(
+    useCallback(() => {
+      cargar();
+    }, [cargar])
+  );
+
+  const refrescar = async () => {
+    setRefrescando(true);
+    await Promise.all([cargar(), new Promise((r) => setTimeout(r, 500))]);
+    setRefrescando(false);
+  };
 
   const cancelar = (compra) => {
     Alert.alert("Cancelar compra", `¿Cancelar tu compra de ${compra.evento.nombre}?`, [
@@ -42,7 +56,7 @@ export default function MisComprasScreen({ navigation }) {
   const pagar = (compra) => {
     Alert.alert(
       "Confirmar pago",
-      `¿Pagar $${compra.total} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
+      `¿Pagar ${formatearPrecio(compra.total)} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
       [
         { text: "No", style: "cancel" },
         {
@@ -70,7 +84,9 @@ export default function MisComprasScreen({ navigation }) {
 
   return (
     <FlatList
-      data={compras}
+        data={compras}
+        refreshing={refrescando}
+        onRefresh={refrescar}
       keyExtractor={(compra) => String(compra.id)}
       contentContainerStyle={styles.lista}
       ListEmptyComponent={<Text style={styles.centro}>Todavía no compraste entradas</Text>}
@@ -83,13 +99,13 @@ export default function MisComprasScreen({ navigation }) {
             </View>
           </View>
 
-          <Text>{item.evento.fecha}</Text>
+          <Text>{formatearFecha(item.evento.fecha)}</Text>
           <Text>
-            {item.cantidad} × {item.tipoEntrada.nombre} · ${item.total}
+            {item.cantidad} × {item.tipoEntrada.nombre} · {formatearPrecio(item.total)}
           </Text>
             {item.estado === "PENDIENTE_PAGO" && (
             <Pressable style={styles.pagar} onPress={() => pagar(item)}>
-              <Text style={styles.pagarTexto}>Pagar ${item.total}</Text>
+              <Text style={styles.pagarTexto}>Pagar {formatearPrecio(item.total)}</Text>
             </Pressable>
           )}
 

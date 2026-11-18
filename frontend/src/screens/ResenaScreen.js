@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { enviar } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 export default function ResenaScreen({ route, navigation }) {
   const { compraId, evento } = route.params;
