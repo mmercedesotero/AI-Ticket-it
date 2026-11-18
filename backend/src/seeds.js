@@ -62,7 +62,6 @@ function cargarDatos() {
   const compraMer = comprar(mer, cosquin, 1, 1, EstadoCompra.UTILIZADA);
 
   const reseniaService = new ReseniaService(reseniaRepository, compraRepository, organizadorRepository);
-  reseniaService.crear({ compraId: compraAna.id, puntuacion: 5, detalle: "Increible organizacion" });
   reseniaService.crear({ compraId: compraMer.id, puntuacion: 4, detalle: "Muy buen festival" });
   reseniaService.crear({ compraId: compraTomas.id, puntuacion: 3, detalle: "El sonido podia mejorar" });
   

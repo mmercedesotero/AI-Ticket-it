@@ -77,6 +77,16 @@ export default function MisComprasScreen({ navigation }) {
           >
             <Text style={styles.chatTexto}>Chat con el organizador</Text>
             </Pressable>
+        {item.estado === "UTILIZADA" && (
+            <Pressable
+              style={styles.puntuar}
+              onPress={() =>
+                navigation.navigate("Resena", { compraId: item.id, evento: item.evento.nombre })
+              }
+            >
+              <Text style={styles.puntuarTexto}>Puntuar evento</Text>
+            </Pressable>
+        )}
 
           {puedeCancelar(item) && (
             <Pressable style={styles.cancelar} onPress={() => cancelar(item)}>
@@ -102,4 +112,6 @@ const styles = StyleSheet.create({
     centro: { marginTop: 100, textAlign: "center" },
     chat: { marginTop: 10, borderWidth: 1, borderColor: "#2f6fdb", borderRadius: 8, padding: 10, alignItems: "center" },
     chatTexto: { color: "#2f6fdb", fontWeight: "600" },
+    puntuar: { marginTop: 10, borderWidth: 1, borderColor: "#f5a623", borderRadius: 8, padding: 10, alignItems: "center" },
+    puntuarTexto: { color: "#c47f00", fontWeight: "600" },
 });
