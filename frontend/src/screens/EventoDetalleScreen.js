@@ -14,6 +14,9 @@ export default function EventoDetalleScreen({ route }) {
     try {
       const datos = await get(`/eventos/${id}`);
       setEvento(datos);
+      setEntradaId((actual) =>
+        actual ?? (datos.tiposEntrada.length > 0 ? datos.tiposEntrada[0].id : null)
+      );
       if (datos.organizador) {
         setOrganizador(await get(`/resenias?organizadorId=${datos.organizador.id}`));
       }
@@ -82,6 +85,10 @@ export default function EventoDetalleScreen({ route }) {
         </Pressable>
       </View>
 
+      {entradaId === null && (
+        <Text style={styles.aviso}>Elegí un tipo de entrada para comprar</Text>
+      )}
+
       <Pressable
         style={[styles.comprar, entradaId === null && styles.comprarInactivo]}
         disabled={entradaId === null}
@@ -123,6 +130,7 @@ const styles = StyleSheet.create({
   cantidadNumero: { fontSize: 20, fontWeight: "bold" },
   comprar: { backgroundColor: "#222", borderRadius: 10, padding: 14, alignItems: "center" },
   comprarInactivo: { backgroundColor: "#aaa" },
+  aviso: { textAlign: "center", color: "#c0392b", marginBottom: 8 },
   comprarTexto: { color: "#fff", fontWeight: "bold" },
   resenia: { borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 10, marginBottom: 8 },
   autor: { color: "#666", marginTop: 2 },

@@ -39,6 +39,14 @@ export default function MisComprasScreen({ navigation }) {
       },
     ]);
   };
+    const pagar = async (compra) => {
+    try {
+      await enviar("PUT", `/compras/${compra.id}/pagar`);
+      cargar();
+    } catch (e) {
+      Alert.alert("No se pudo pagar", e.message);
+    }
+  };
 
   const puedeCancelar = (compra) =>
     compra.estado === "PENDIENTE_PAGO" || compra.estado === "CONFIRMADA";
@@ -67,10 +75,16 @@ export default function MisComprasScreen({ navigation }) {
           <Text>
             {item.cantidad} × {item.tipoEntrada.nombre} · ${item.total}
           </Text>
+            {item.estado === "PENDIENTE_PAGO" && (
+            <Pressable style={styles.pagar} onPress={() => pagar(item)}>
+              <Text style={styles.pagarTexto}>Pagar ${item.total}</Text>
+            </Pressable>
+          )}
 
           {item.diasParaEvento !== null && (
             <Text style={styles.dias}>{textoDias(item.diasParaEvento)}</Text>
           )}
+          
             <Pressable
             style={styles.chat}
             onPress={() => navigation.navigate("Chat", { compraId: item.id })}
@@ -114,4 +128,6 @@ const styles = StyleSheet.create({
     chatTexto: { color: "#2f6fdb", fontWeight: "600" },
     puntuar: { marginTop: 10, borderWidth: 1, borderColor: "#f5a623", borderRadius: 8, padding: 10, alignItems: "center" },
     puntuarTexto: { color: "#c47f00", fontWeight: "600" },
+    pagar: { marginTop: 10, backgroundColor: "#2e9e4f", borderRadius: 8, padding: 10, alignItems: "center" },
+    pagarTexto: { color: "#fff", fontWeight: "bold" },
 });
