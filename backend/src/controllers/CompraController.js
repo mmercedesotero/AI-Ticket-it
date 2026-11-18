@@ -8,6 +8,8 @@ class CompraController {
     this.actualizar = this.actualizar.bind(this);
     this.eliminar = this.eliminar.bind(this);
     this.cancelar = this.cancelar.bind(this);
+    this.obtenerMensajes = this.obtenerMensajes.bind(this);
+    this.enviarMensaje = this.enviarMensaje.bind(this);
   }
   
   obtenerTodos(req, res) {
@@ -62,6 +64,15 @@ class CompraController {
   cancelar(req, res) {
     const compra = this.compraService.cancelarCompra(req.params.id);
     res.json(compra);
+  }
+
+  obtenerMensajes(req, res) {
+    res.json(this.compraService.obtenerMensajes(req.params.id));
+  }
+
+  enviarMensaje(req, res) {
+    const mensaje = this.compraService.enviarMensaje(req.params.id, req.body);
+    res.status(201).json(mensaje);
   }
 }
 

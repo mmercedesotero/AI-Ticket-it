@@ -2,6 +2,7 @@ const Compra = require("../models/Compra");
 const NotFoundError = require("../errors/NotFoundError");
 const ValidationError = require("../errors/ValidationError");
 const EstadoCompra = require("../models/EstadoCompra");
+const Mensaje = require("../models/Mensaje");
 
 class CompraService {
   constructor(compraRepository, usuarioRepository, eventoRepository) {
@@ -151,6 +152,40 @@ class CompraService {
     compra.tipoEntrada.cupoDisponible += compra.cantidad;
 
     return compra;
+  }
+  
+  obtenerMensajes(compraId) {
+    const compra = this.compraRepository.findById(compraId);
+    if (!compra) throw new NotFoundError("Compra no encontrada");
+
+    return compra.mensajes;
+  }
+
+  enviarMensaje(compraId, { autorId, rol, texto } = {}) {
+    const compra = this.compraRepository.findById(compraId);
+    if (!compra) throw new NotFoundError("Compra no encontrada");
+
+    if (typeof texto !== "string" || texto.trim() === "")
+      throw new ValidationError("El mensaje no puede estar vacío");
+
+    if (rol !== "COMPRADOR" && rol !== "ORGANIZADOR")
+      throw new ValidationError("El rol debe ser COMPRADOR u ORGANIZADOR");
+
+    const participante =
+      rol === "COMPRADOR" ? compra.comprador : compra.evento.organizador;
+    if (!participante || String(participante.id) !== String(autorId))
+      throw new ValidationError("El autor no participa de esta compra");
+
+    const nombre =
+      rol === "COMPRADOR"
+        ? `${participante.nombre} ${participante.apellido}`
+        : participante.nombre;
+    const autor = { id: participante.id, nombre, rol };
+
+    const mensaje = new Mensaje(compra.mensajes.length + 1, autor, texto.trim());
+    compra.mensajes.push(mensaje);
+
+    return mensaje;
   }
 }
 
