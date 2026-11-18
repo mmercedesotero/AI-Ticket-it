@@ -90,7 +90,7 @@ function Chip({ etiqueta, activo, onPress }) {
 }
 
 const styles = StyleSheet.create({
-  contenedor: { flex: 1, paddingTop: 60, paddingHorizontal: 16 },
+  contenedor: { flex: 1, paddingTop: 12, paddingHorizontal: 16 },
   titulo: { fontSize: 24, fontWeight: "bold", marginBottom: 12 },
   buscador: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 10 },
   fila: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 10 },
