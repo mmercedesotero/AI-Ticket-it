@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { enviar, get, USUARIO_ID } from "../api";
+import { enviar, get } from "../api";
 import { formatearFecha, formatearPrecio } from "../formato"
 
 const COLORES = {
@@ -19,7 +19,7 @@ export default function MisComprasScreen({ navigation }) {
 
   const cargar = useCallback(
     () =>
-      get(`/compras?usuarioId=${USUARIO_ID}`)
+      get("/compras")
         .then(setCompras)
         .catch((e) => setError(e.message)),
     []

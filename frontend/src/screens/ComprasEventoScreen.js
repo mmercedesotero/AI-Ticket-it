@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
 import { formatearFecha, formatearPrecio } from "../formato"
@@ -12,7 +12,7 @@ const COLORES = {
   REEMBOLSADA: "#8a4fc7",
 };
 
-export default function ComprasEventoScreen({ route }) {
+export default function ComprasEventoScreen({ route, navigation }) {
   const { id } = route.params;
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
@@ -51,8 +51,14 @@ export default function ComprasEventoScreen({ route }) {
             </View>
           </View>
           <Text>
-            {compra.cantidad} × {compra.tipoEntrada} · {formatearFecha(compra.evento.fecha)}
+            {compra.cantidad} × {compra.tipoEntrada} · {formatearPrecio(compra.total)}
           </Text>
+          <Pressable
+            style={styles.chat}
+            onPress={() => navigation.navigate("Chat", { compraId: compra.id })}
+          >
+            <Text style={styles.chatTexto}>Chat con el comprador</Text>
+          </Pressable>
         </View>
       ))}
     </ScrollView>
@@ -68,5 +74,7 @@ const styles = StyleSheet.create({
   tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 8 },
   estado: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
   estadoTexto: { color: "#fff", fontSize: 12, fontWeight: "bold" },
+  chat: { marginTop: 8, borderWidth: 1, borderColor: "#2f6fdb", borderRadius: 8, padding: 8, alignItems: "center" },
+  chatTexto: { color: "#2f6fdb", fontWeight: "600" },
   centro: { marginTop: 100, textAlign: "center" },
 });

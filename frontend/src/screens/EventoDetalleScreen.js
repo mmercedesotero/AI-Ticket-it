@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { enviar, get, USUARIO_ID } from "../api";
+import { enviar, get } from "../api";
 import { formatearFecha, formatearPrecio, yaSeRealizo } from "../formato"
 
 export default function EventoDetalleScreen({ route }) {
@@ -43,7 +43,6 @@ const comprar = () => {
         onPress: async () => {
           try {
             const compra = await enviar("POST", "/compras", {
-              usuarioId: USUARIO_ID,
               eventoId: evento.id,
               entradaId,
               cantidad,

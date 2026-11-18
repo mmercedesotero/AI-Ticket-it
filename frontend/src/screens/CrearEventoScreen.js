@@ -7,17 +7,14 @@ const entradaVacia = () => ({ nombre: "", precio: "", ubicacion: "", cupo: "" })
 
 export default function CrearEventoScreen({ navigation }) {
   const [categorias, setCategorias] = useState([]);
-  const [organizadores, setOrganizadores] = useState([]);
   const [nombre, setNombre] = useState("");
   const [fecha, setFecha] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [categoriaId, setCategoriaId] = useState(null);
-  const [organizadorId, setOrganizadorId] = useState(null);
   const [entradas, setEntradas] = useState([entradaVacia()]);
 
   useEffect(() => {
     get("/categorias").then(setCategorias).catch(() => {});
-    get("/organizadores").then(setOrganizadores).catch(() => {});
   }, []);
 
   const cambiarEntrada = (indice, campo, valor) =>
@@ -35,7 +32,6 @@ export default function CrearEventoScreen({ navigation }) {
         fecha,
         descripcion,
         categoriaId,
-        organizadorId,
         tiposEntrada: entradas.map((e) => ({
           nombre: e.nombre,
           precio: e.precio.trim() === "" ? undefined : Number(e.precio),
@@ -94,9 +90,6 @@ export default function CrearEventoScreen({ navigation }) {
 
       <Text style={styles.label}>Categoría</Text>
       {opciones(categorias, categoriaId, setCategoriaId)}
-
-      <Text style={styles.label}>Organizador</Text>
-      {opciones(organizadores, organizadorId, setOrganizadorId)}
 
       <Text style={styles.seccion}>Tipos de entrada</Text>
       {entradas.map((e, i) => (

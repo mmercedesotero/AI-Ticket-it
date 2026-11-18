@@ -1,4 +1,5 @@
 const express = require("express");
+const auth = require("../middlewares/auth");
 const ReseniaController = require("../controllers/ReseniaController");
 const ReseniaService = require("../services/ReseniaService");
 const {
@@ -17,6 +18,6 @@ const controllers = new ReseniaController(reseniaService);
 const router = express.Router();
 
 router.get("/", controllers.obtenerTodas);
-router.post("/", controllers.crear);
+router.post("/", auth, auth.soloComprador, controllers.crear);
 
 module.exports = router;

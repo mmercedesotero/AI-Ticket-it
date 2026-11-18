@@ -1,3 +1,7 @@
+const ForbiddenError = require("../errors/ForbiddenError");
+const NotFoundError = require("../errors/NotFoundError");
+const ValidationError = require("../errors/ValidationError");
+
 class CompraController {
   constructor(compraService) {
     this.compraService = compraService;
@@ -5,79 +9,87 @@ class CompraController {
     this.obtenerTodos = this.obtenerTodos.bind(this);
     this.obtenerPorId = this.obtenerPorId.bind(this);
     this.crear = this.crear.bind(this);
-    this.actualizar = this.actualizar.bind(this);
-    this.eliminar = this.eliminar.bind(this);
     this.cancelar = this.cancelar.bind(this);
+    this.pagar = this.pagar.bind(this);
     this.obtenerMensajes = this.obtenerMensajes.bind(this);
     this.enviarMensaje = this.enviarMensaje.bind(this);
-    this.pagar = this.pagar.bind(this);
+    this.exigirDuenio = this.exigirDuenio.bind(this);
+    this.exigirParticipante = this.exigirParticipante.bind(this);
   }
-  
+
+  // Solo el comprador puede pagar o cancelar su compra.
+  exigirDuenio(req) {
+    const compra = this.compraService.obtenerPorId(req.params.id);
+    if (!compra) throw new NotFoundError("Compra no encontrada");
+    if (String(compra.comprador.id) !== String(req.usuario.id))
+      throw new ForbiddenError("Esta compra no es tuya");
+    return compra;
+  }
+
+  // Participan de una compra el comprador y el organizador del evento.
+  exigirParticipante(req) {
+    const compra = this.compraService.obtenerPorId(req.params.id);
+    if (!compra) throw new NotFoundError("Compra no encontrada");
+
+    const esComprador =
+      req.rol === "COMPRADOR" && String(compra.comprador.id) === String(req.usuario.id);
+    const esOrganizador =
+      req.rol === "ORGANIZADOR" &&
+      compra.evento.organizador &&
+      String(compra.evento.organizador.id) === String(req.organizador.id);
+
+    if (!esComprador && !esOrganizador)
+      throw new ForbiddenError("No participás de esta compra");
+    return compra;
+  }
+
   obtenerTodos(req, res) {
-    const { usuarioId, eventoId } = req.query;
-
-    if (usuarioId) {
-      return res.json(this.compraService.obtenerPorUsuario(usuarioId));
+    // El comprador ve sus compras; el organizador ve las de uno de sus eventos.
+    if (req.rol === "COMPRADOR") {
+      return res.json(this.compraService.obtenerPorUsuario(req.usuario.id));
     }
 
-    if (eventoId) {
-      return res.json(this.compraService.obtenerPorEvento(eventoId));
-    }
-
-    res.json(this.compraService.obtenerTodos());
+    if (!req.query.eventoId) throw new ValidationError("Indicá el eventoId");
+    res.json(this.compraService.obtenerPorEvento(req.query.eventoId, req.organizador.id));
   }
 
   obtenerPorId(req, res) {
-    const compra = this.compraService.obtenerPorId(req.params.id);
-
-    if (!compra) {
-      return res.status(404).json({ error: "Compra no encontrada" });
-    }
-
-    res.json(compra);
+    res.json(this.exigirParticipante(req));
   }
 
   crear(req, res) {
-    const compra = this.compraService.comprarEntrada(req.body);
+    const compra = this.compraService.comprarEntrada({
+      ...req.body,
+      usuarioId: req.usuario.id,
+    });
     res.status(201).json(compra);
   }
 
-  actualizar(req, res) {
-    const compra = this.compraService.actualizar(req.params.id, req.body);
-
-    if (!compra) {
-      return res.status(404).json({ error: "Compra no encontrada" });
-    }
-
-    res.json(compra);
-  }
-
-  eliminar(req, res) {
-    const eliminada = this.compraService.eliminar(req.params.id);
-
-    if (!eliminada) {
-      return res.status(404).json({ error: "Compra no encontrada" });
-    }
-
-    res.status(204).end();
-  }
-
   cancelar(req, res) {
-    const compra = this.compraService.cancelarCompra(req.params.id);
-    res.json(compra);
+    this.exigirDuenio(req);
+    res.json(this.compraService.cancelarCompra(req.params.id));
   }
-  
+
   pagar(req, res) {
-    const compra = this.compraService.pagarCompra(req.params.id);
-    res.json(compra);
+    this.exigirDuenio(req);
+    res.json(this.compraService.pagarCompra(req.params.id));
   }
 
   obtenerMensajes(req, res) {
+    this.exigirParticipante(req);
     res.json(this.compraService.obtenerMensajes(req.params.id));
   }
 
   enviarMensaje(req, res) {
-    const mensaje = this.compraService.enviarMensaje(req.params.id, req.body);
+    this.exigirParticipante(req);
+
+    // El autor y su rol salen siempre del token, nunca del body.
+    const autorId = req.rol === "COMPRADOR" ? req.usuario.id : req.organizador.id;
+    const mensaje = this.compraService.enviarMensaje(req.params.id, {
+      autorId,
+      rol: req.rol,
+      texto: req.body.texto,
+    });
     res.status(201).json(mensaje);
   }
 }

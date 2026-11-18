@@ -2,6 +2,7 @@ const Resenia = require("../models/Resenia");
 const EstadoCompra = require("../models/EstadoCompra");
 const NotFoundError = require("../errors/NotFoundError");
 const ValidationError = require("../errors/ValidationError");
+const ForbiddenError = require("../errors/ForbiddenError");
 
 class ReseniaService {
   constructor(reseniaRepository, compraRepository, organizadorRepository) {
@@ -10,9 +11,12 @@ class ReseniaService {
     this.organizadorRepository = organizadorRepository;
   }
 
-  crear({ compraId, puntuacion, detalle } = {}) {
+  crear({ usuarioId, compraId, puntuacion, detalle } = {}) {
     const compra = this.compraRepository.findById(compraId);
     if (!compra) throw new NotFoundError("Compra no encontrada");
+
+    if (String(compra.comprador.id) !== String(usuarioId))
+      throw new ForbiddenError("Solo podés puntuar tus propias compras");
 
     if (compra.estado !== EstadoCompra.UTILIZADA)
       throw new ValidationError(

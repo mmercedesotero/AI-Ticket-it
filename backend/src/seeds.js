@@ -7,17 +7,21 @@ const EstadoCompra = require("./models/EstadoCompra");
 const CompraService = require("./services/CompraService");
 const { usuarioRepository, eventoRepository, organizadorRepository, compraRepository, categoriaRepository, reseniaRepository } = require("./container");
 const ReseniaService = require("./services/ReseniaService");
+const { hashPassword } = require("./utils/password");
 
 function cargarDatos() {
-  const ana = usuarioRepository.save(new Usuario(undefined, "Ana", "Perez"));
-  const mer = usuarioRepository.save(new Usuario(undefined, "Mer", "Perez"));
-  const tomas = usuarioRepository.save(new Usuario(undefined, "Tomas", "Gomez"));
+  // Todas las cuentas de prueba (compradores y organizadores) tienen la contraseña "123456".
+  const crearUsuario = (nombre, apellido, email) =>
+    usuarioRepository.save(new Usuario(undefined, nombre, apellido, email, hashPassword("123456")));
+  const ana = crearUsuario("Ana", "Perez", "ana@mail.com");
+  const mer = crearUsuario("Mer", "Perez", "mer@mail.com");
+  const tomas = crearUsuario("Tomas", "Gomez", "tomas@mail.com");
   const recital = categoriaRepository.save(new Categoria(undefined, "Recital", "Musica en vivo"));
   const teatro = categoriaRepository.save(new Categoria(undefined, "Teatro", "Obras y espectaculos"));
   const festival = categoriaRepository.save(new Categoria(undefined, "Festival", "Festivales de varios dias"));
 
-  const liveNation = organizadorRepository.save(new Organizador(undefined, "Live Nation"));
-  const teatroBA = organizadorRepository.save(new Organizador(undefined, "Teatro BA"));
+  const liveNation = organizadorRepository.save(new Organizador(undefined, "Live Nation", "live@mail.com", hashPassword("123456")));
+  const teatroBA = organizadorRepository.save(new Organizador(undefined, "Teatro BA", "teatro@mail.com", hashPassword("123456")));
 
   const eventosIniciales = [
     { nombre: "Coldplay", fecha: "2027-01-10", descripcion: "Gira mundial", categoria: recital, organizador: liveNation,
@@ -62,8 +66,8 @@ function cargarDatos() {
   const compraMer = comprar(mer, cosquin, 1, 1, EstadoCompra.UTILIZADA);
 
   const reseniaService = new ReseniaService(reseniaRepository, compraRepository, organizadorRepository);
-  reseniaService.crear({ compraId: compraMer.id, puntuacion: 4, detalle: "Muy buen festival" });
-  reseniaService.crear({ compraId: compraTomas.id, puntuacion: 3, detalle: "El sonido podia mejorar" });
+  reseniaService.crear({ usuarioId: mer.id, compraId: compraMer.id, puntuacion: 4, detalle: "Muy buen festival" });
+  reseniaService.crear({ usuarioId: tomas.id, compraId: compraTomas.id, puntuacion: 3, detalle: "El sonido podia mejorar" });
   
   comprar(ana, coldplay, 1, 2, EstadoCompra.CONFIRMADA);
   comprar(mer, coldplay, 1, 1);
