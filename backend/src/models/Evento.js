@@ -24,6 +24,11 @@ class Evento {
       (entrada) => entrada.precio >= min && entrada.precio <= max
     );
   }
+
+  precioDesde() {
+    if (this.tiposEntrada.length === 0) return null;
+    return Math.min(...this.tiposEntrada.map((entrada) => entrada.precio));
+  }
 }
 
 module.exports = Evento;
