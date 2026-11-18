@@ -3,6 +3,7 @@ const NotFoundError = require("../errors/NotFoundError");
 const ValidationError = require("../errors/ValidationError");
 const EstadoCompra = require("../models/EstadoCompra");
 const Mensaje = require("../models/Mensaje");
+const ForbiddenError = require("../errors/ForbiddenError");
 
 class CompraService {
   constructor(compraRepository, usuarioRepository, eventoRepository) {
@@ -83,9 +84,12 @@ class CompraService {
       }));
   }
 
-  obtenerPorEvento(eventoId) {
+  obtenerPorEvento(eventoId, organizadorId) {
     const evento = this.eventoRepository.findById(eventoId);
     if (!evento) throw new NotFoundError("Evento no encontrado");
+
+    if (!evento.organizador || String(evento.organizador.id) !== String(organizadorId))
+      throw new ForbiddenError("Este evento no es tuyo");
 
     const compras = this.compraRepository
       .findAll()
@@ -193,7 +197,7 @@ class CompraService {
     const participante =
       rol === "COMPRADOR" ? compra.comprador : compra.evento.organizador;
     if (!participante || String(participante.id) !== String(autorId))
-      throw new ValidationError("El autor no participa de esta compra");
+      throw new ForbiddenError("El autor no participa de esta compra");
 
     const nombre =
       rol === "COMPRADOR"

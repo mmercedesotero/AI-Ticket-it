@@ -2,9 +2,11 @@ import { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
+import { useSesion } from "../sesion";
 import { formatearFecha, formatearPrecio } from "../formato"
 
 export default function OrganizadorScreen({ navigation }) {
+  const { sesion } = useSesion();
   const [eventos, setEventos] = useState([]);
   const [error, setError] = useState(null);
   const [refrescando, setRefrescando] = useState(false);
@@ -12,7 +14,9 @@ export default function OrganizadorScreen({ navigation }) {
   const cargar = useCallback(
     () =>
       get("/eventos?orden=fecha")
-        .then(setEventos)
+        .then((todos) =>
+          setEventos(todos.filter((e) => e.organizador?.id === sesion.usuario.id))
+        )
         .catch((e) => setError(e.message)),
     []
   );
@@ -38,6 +42,7 @@ export default function OrganizadorScreen({ navigation }) {
         onRefresh={refrescar}
         keyExtractor={(evento) => String(evento.id)}
         contentContainerStyle={styles.lista}
+        ListEmptyComponent={<Text style={styles.centro}>Todavía no creaste eventos</Text>}
         ListHeaderComponent={
             <Pressable style={styles.crear} onPress={() => navigation.navigate("CrearEvento")}>
             <Text style={styles.crearTexto}>+ Crear evento</Text>

@@ -23,7 +23,10 @@ class EventoController {
   }
 
   crear(req, res) {
-    const evento = this.eventoService.crear(req.body);
+    const evento = this.eventoService.crear({
+      ...req.body,
+      organizadorId: req.organizador.id,
+    });
     res.status(201).json(evento);
   }
 

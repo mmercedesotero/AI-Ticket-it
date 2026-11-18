@@ -6,15 +6,15 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { enviar, get } from "../api";
-import { formatearFecha, formatearPrecio } from "../formato"
+import { useSesion } from "../sesion";
 
 export default function ChatScreen({ route }) {
   const { compraId } = route.params;
+  const { sesion } = useSesion();
+  const rol = sesion.rol;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  const [compra, setCompra] = useState(null);
   const [mensajes, setMensajes] = useState([]);
-  const [rol, setRol] = useState("COMPRADOR");
   const [texto, setTexto] = useState("");
   const lista = useRef(null);
 
@@ -23,20 +23,17 @@ export default function ChatScreen({ route }) {
   }, [compraId]);
 
   useEffect(() => {
-    get(`/compras/${compraId}`).then(setCompra).catch(() => {});
     cargarMensajes();
     const intervalo = setInterval(cargarMensajes, 3000);
     return () => clearInterval(intervalo);
-  }, [compraId, cargarMensajes]);
+  }, [cargarMensajes]);
 
+  // El servidor sabe quién sos por el token: solo mandamos el texto.
   const enviarMensaje = async () => {
-    if (!compra || texto.trim() === "") return;
-
-    const autorId =
-      rol === "COMPRADOR" ? compra.comprador.id : compra.evento.organizador.id;
+    if (texto.trim() === "") return;
 
     try {
-      await enviar("POST", `/compras/${compraId}/mensajes`, { autorId, rol, texto });
+      await enviar("POST", `/compras/${compraId}/mensajes`, { texto });
       setTexto("");
       cargarMensajes();
     } catch (e) {
@@ -50,21 +47,6 @@ export default function ChatScreen({ route }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={headerHeight}
     >
-      <View style={styles.selector}>
-        <Text style={styles.etiqueta}>Escribir como:</Text>
-        {["COMPRADOR", "ORGANIZADOR"].map((r) => (
-          <Pressable
-            key={r}
-            onPress={() => setRol(r)}
-            style={[styles.chip, rol === r && styles.chipActivo]}
-          >
-            <Text style={rol === r ? styles.chipTextoActivo : null}>
-              {r === "COMPRADOR" ? "Comprador" : "Organizador"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
       <FlatList
         ref={lista}
         data={mensajes}
@@ -100,11 +82,6 @@ export default function ChatScreen({ route }) {
 
 const styles = StyleSheet.create({
   contenedor: { flex: 1 },
-  selector: { flexDirection: "row", alignItems: "center", gap: 8, padding: 10, borderBottomWidth: 1, borderColor: "#eee" },
-  etiqueta: { fontWeight: "600" },
-  chip: { borderWidth: 1, borderColor: "#999", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  chipActivo: { backgroundColor: "#222", borderColor: "#222" },
-  chipTextoActivo: { color: "#fff" },
   mensajes: { padding: 12 },
   vacio: { textAlign: "center", marginTop: 40, color: "#888" },
   burbuja: { maxWidth: "80%", borderRadius: 12, padding: 10, marginBottom: 8 },

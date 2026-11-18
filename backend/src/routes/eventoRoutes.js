@@ -2,6 +2,7 @@ const express = require("express");
 const EventoController = require("../controllers/EventoController");
 const EventoRepository = require("../repositories/EventoRepository");
 const EventoService = require("../services/EventoService");
+const auth = require("../middlewares/auth");
 const { eventoRepository, reseniaRepository, categoriaRepository, organizadorRepository } = require("../container");
 
 const eventoService = new EventoService(eventoRepository, reseniaRepository, categoriaRepository, organizadorRepository);
@@ -11,9 +12,9 @@ const router = express.Router();
 
 router.get("/", controllers.obtenerTodos);
 router.get("/:id", controllers.obtenerPorId);
-router.post("/", controllers.crear);
-router.put("/:id", controllers.actualizar);
-router.delete("/:id", controllers.eliminar);
+router.post("/", auth, auth.soloOrganizador, controllers.crear);
+router.put("/:id", auth, auth.soloOrganizador, controllers.actualizar);
+router.delete("/:id", auth, auth.soloOrganizador, controllers.eliminar);
 
 
 module.exports = router;

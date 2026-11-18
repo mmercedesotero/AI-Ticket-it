@@ -11,7 +11,10 @@ class ReseniaController {
   }
 
   crear(req, res) {
-    const resenia = this.reseniaService.crear(req.body);
+    const resenia = this.reseniaService.crear({
+      ...req.body,
+      usuarioId: req.usuario.id,
+    });
     res.status(201).json(resenia);
   }
 }

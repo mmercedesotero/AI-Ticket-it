@@ -6,10 +6,12 @@ const CompraRoutes = require("./routes/CompraRoutes");
 const errorHandler = require("./middlewares/errorHandler");
 const CategoriaRoutes = require("./routes/CategoriaRoutes");
 const ReseniaRoutes = require("./routes/ReseniaRoutes");
+const AuthRoutes = require("./routes/AuthRoutes");
 
 const app = express();
 app.use(express.json());
 
+app.use("/auth", AuthRoutes);
 app.use("/eventos", EventoRoutes);
 app.use("/usuarios", UsuarioRoutes)
 app.use("/organizadores", OrganizadorRoutes)
