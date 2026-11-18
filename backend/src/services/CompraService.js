@@ -43,6 +43,8 @@ class CompraService {
   comprarEntrada({ usuarioId, eventoId, entradaId, cantidad } = {}) {
     const usuario = this.usuarioRepository.findById(usuarioId);
     if (!usuario) throw new NotFoundError("Usuario no encontrado");
+    
+    if (evento.yaSeRealizo()) throw new ValidationError("El evento ya se realizó");
 
     const evento = this.eventoRepository.findById(eventoId);
     if (!evento) throw new NotFoundError("Evento no encontrado");
