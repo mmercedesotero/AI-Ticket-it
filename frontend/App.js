@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import EventosScreen from "./src/screens/EventosScreen";
 import EventoDetalleScreen from "./src/screens/EventoDetalleScreen";
 import MisComprasScreen from "./src/screens/MisComprasScreen";
+import ChatScreen from "./src/screens/ChatScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,6 +24,7 @@ export default function App() {
       <Stack.Navigator>
         <Stack.Screen name="Inicio" component={Inicio} options={{ headerShown: false }} />
         <Stack.Screen name="Detalle" component={EventoDetalleScreen} options={{ title: "Evento" }} />
+        <Stack.Screen name="Chat" component={ChatScreen} options={{ title: "Chat" }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

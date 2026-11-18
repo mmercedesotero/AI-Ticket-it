@@ -11,7 +11,7 @@ const COLORES = {
   REEMBOLSADA: "#8a4fc7",
 };
 
-export default function MisComprasScreen() {
+export default function MisComprasScreen({ navigation }) {
   const [compras, setCompras] = useState([]);
   const [error, setError] = useState(null);
 
@@ -71,6 +71,12 @@ export default function MisComprasScreen() {
           {item.diasParaEvento !== null && (
             <Text style={styles.dias}>{textoDias(item.diasParaEvento)}</Text>
           )}
+            <Pressable
+            style={styles.chat}
+            onPress={() => navigation.navigate("Chat", { compraId: item.id })}
+          >
+            <Text style={styles.chatTexto}>Chat con el organizador</Text>
+            </Pressable>
 
           {puedeCancelar(item) && (
             <Pressable style={styles.cancelar} onPress={() => cancelar(item)}>
@@ -84,14 +90,16 @@ export default function MisComprasScreen() {
 }
 
 const styles = StyleSheet.create({
-  lista: { padding: 16 },
-  tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 12 },
-  encabezado: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-  nombre: { fontSize: 18, fontWeight: "600", flexShrink: 1 },
-  estado: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  estadoTexto: { color: "#fff", fontSize: 12, fontWeight: "bold" },
-  dias: { marginTop: 6, fontWeight: "bold", color: "#2e9e4f" },
-  cancelar: { marginTop: 10, borderWidth: 1, borderColor: "#c0392b", borderRadius: 8, padding: 10, alignItems: "center" },
-  cancelarTexto: { color: "#c0392b", fontWeight: "600" },
-  centro: { marginTop: 100, textAlign: "center" },
+    lista: { padding: 16 },
+    tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 12 },
+    encabezado: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+    nombre: { fontSize: 18, fontWeight: "600", flexShrink: 1 },
+    estado: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+    estadoTexto: { color: "#fff", fontSize: 12, fontWeight: "bold" },
+    dias: { marginTop: 6, fontWeight: "bold", color: "#2e9e4f" },
+    cancelar: { marginTop: 10, borderWidth: 1, borderColor: "#c0392b", borderRadius: 8, padding: 10, alignItems: "center" },
+    cancelarTexto: { color: "#c0392b", fontWeight: "600" },
+    centro: { marginTop: 100, textAlign: "center" },
+    chat: { marginTop: 10, borderWidth: 1, borderColor: "#2f6fdb", borderRadius: 8, padding: 10, alignItems: "center" },
+    chatTexto: { color: "#2f6fdb", fontWeight: "600" },
 });
