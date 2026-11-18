@@ -109,7 +109,24 @@ class CompraService {
     };
   }
 
-  cancelarCompra(id) {
+    obtenerPorUsuario(usuarioId) {
+    const usuario = this.usuarioRepository.findById(usuarioId);
+    if (!usuario) throw new NotFoundError("Usuario no encontrado");
+
+    return this.compraRepository
+      .findAll()
+      .filter((compra) => String(compra.comprador.id) === String(usuarioId))
+      .map((compra) => {
+        const dias = compra.diasParaElEvento();
+
+        return {
+          ...compra,
+          diasParaEvento:
+            compra.estado === EstadoCompra.CONFIRMADA && dias >= 0 ? dias : null,
+        };
+      });
+  }
+    cancelarCompra(id) {
     const compra = this.compraRepository.findById(id);
     if (!compra) throw new NotFoundError("Compra no encontrada");
 

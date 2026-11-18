@@ -9,19 +9,58 @@ const { usuarioRepository, eventoRepository, organizadorRepository, compraReposi
 
 function cargarDatos() {
   const ana = usuarioRepository.save(new Usuario(undefined, "Ana", "Perez"));
+  const mer = usuarioRepository.save(new Usuario(undefined, "Mer", "Perez"));
+  const tomas = usuarioRepository.save(new Usuario(undefined, "Tomas", "Gomez"));
+
   const liveNation = organizadorRepository.save(new Organizador(undefined, "Live Nation"));
+  const teatroBA = organizadorRepository.save(new Organizador(undefined, "Teatro BA"));
+
   const recital = new Categoria(1, "Recital", "Musica en vivo");
-  const evento = eventoRepository.save(new Evento(
-    undefined, "Coldplay", "2027-01-10", "Gira mundial", recital,
-    [new Entrada(1, "General", 80000, "Campo", 100),
-     new Entrada(2, "VIP", 200000, "Palco", 20)],
-    [], liveNation
-  ));
-  liveNation.eventos.push(evento);
+  const teatro = new Categoria(2, "Teatro", "Obras y espectaculos");
+  const festival = new Categoria(3, "Festival", "Festivales de varios dias");
+
+  const eventosIniciales = [
+    { nombre: "Coldplay", fecha: "2027-01-10", descripcion: "Gira mundial", categoria: recital, organizador: liveNation,
+      entradas: [["General", 80000, "Campo", 100], ["VIP", 200000, "Palco", 20]] },
+    { nombre: "Festival de Jazz", fecha: "2027-03-20", descripcion: "Dos dias de jazz en vivo", categoria: festival, organizador: liveNation,
+      entradas: [["General", 15000, "Campo", 200], ["VIP", 45000, "Palco", 30]] },
+    { nombre: "Hamlet", fecha: "2026-12-05", descripcion: "Clasico de Shakespeare", categoria: teatro, organizador: teatroBA,
+      entradas: [["Platea", 35000, "Sala", 80], ["Pullman", 25000, "Balcon", 60]] },
+    { nombre: "Lollapalooza", fecha: "2027-03-26", descripcion: "Tres dias de musica", categoria: festival, organizador: liveNation,
+      entradas: [["Dia 1", 120000, "Campo", 500], ["Pase 3 dias", 300000, "Campo", 100]] },
+    { nombre: "Noche de Rock", fecha: "2025-06-01", descripcion: "Show ya realizado", categoria: recital, organizador: teatroBA,
+      entradas: [["General", 20000, "Campo", 150]] },
+  ];
+
+  const eventos = eventosIniciales.map((datos) => {
+    const tiposEntrada = datos.entradas.map(
+      ([nombre, precio, ubicacion, cupo], i) =>
+        new Entrada(i + 1, nombre, precio, ubicacion, cupo)
+    );
+    const evento = eventoRepository.save(
+      new Evento(undefined, datos.nombre, datos.fecha, datos.descripcion,
+        datos.categoria, tiposEntrada, [], datos.organizador)
+    );
+    datos.organizador.eventos.push(evento);
+    return evento;
+  });
+  const [coldplay, jazz, hamlet, lolla, nocheRock] = eventos;
 
   const compraService = new CompraService(compraRepository, usuarioRepository, eventoRepository);
-  const compra = compraService.comprarEntrada({ usuarioId: ana.id, eventoId: evento.id, entradaId: 1, cantidad: 2 });
-  compra.actualizarEstado(EstadoCompra.CONFIRMADA);
+  const comprar = (usuario, evento, entradaId, cantidad, estado) => {
+    const compra = compraService.comprarEntrada({
+      usuarioId: usuario.id, eventoId: evento.id, entradaId, cantidad,
+    });
+    if (estado) compra.actualizarEstado(estado);
+    return compra;
+  };
+
+  comprar(ana, coldplay, 1, 2, EstadoCompra.CONFIRMADA);
+  comprar(mer, coldplay, 1, 1);
+  comprar(ana, jazz, 2, 1, EstadoCompra.CONFIRMADA);
+  comprar(mer, hamlet, 1, 2, EstadoCompra.CONFIRMADA);
+  comprar(tomas, nocheRock, 1, 2, EstadoCompra.UTILIZADA);
+  comprar(mer, nocheRock, 1, 1, EstadoCompra.CONFIRMADA);
 }
 
 module.exports = cargarDatos;
