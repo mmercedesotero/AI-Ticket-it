@@ -39,13 +39,25 @@ export default function MisComprasScreen({ navigation }) {
       },
     ]);
   };
-    const pagar = async (compra) => {
-    try {
-      await enviar("PUT", `/compras/${compra.id}/pagar`);
-      cargar();
-    } catch (e) {
-      Alert.alert("No se pudo pagar", e.message);
-    }
+  const pagar = (compra) => {
+    Alert.alert(
+      "Confirmar pago",
+      `¿Pagar $${compra.total} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Sí, pagar",
+          onPress: async () => {
+            try {
+              await enviar("PUT", `/compras/${compra.id}/pagar`);
+              cargar();
+            } catch (e) {
+              Alert.alert("No se pudo pagar", e.message);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const puedeCancelar = (compra) =>
