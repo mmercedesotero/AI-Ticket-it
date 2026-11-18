@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 export default function OrganizadorScreen({ navigation }) {
   const [eventos, setEventos] = useState([]);
@@ -33,7 +34,7 @@ export default function OrganizadorScreen({ navigation }) {
           onPress={() => navigation.navigate("ComprasEvento", { id: item.id })}
         >
           <Text style={styles.nombre}>{item.nombre}</Text>
-          <Text>{item.fecha} · {item.organizador?.nombre}</Text>
+          <Text>{formatearFecha(item.fecha)} · {item.organizador?.nombre}</Text>
         </Pressable>
       )}
     />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { get } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 const ORDENES = [
   { clave: "fecha", etiqueta: "Fecha" },
@@ -72,8 +73,8 @@ export default function EventosScreen({ navigation }) {
             onPress={() => navigation.navigate("Detalle", { id: item.id })}
           >
             <Text style={styles.nombre}>{item.nombre}</Text>
-            <Text>{item.fecha} · {item.categoria?.nombre}</Text>
-            {precioDesde(item) !== null && <Text>Desde ${precioDesde(item)}</Text>}
+            <Text>{formatearFecha(item.fecha)} · {item.categoria?.nombre}</Text>
+            {precioDesde(item) !== null && <Text>Desde {formatearPrecio(precioDesde(item))}</Text>}
           </Pressable>
         )}
       />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { enviar, get, USUARIO_ID } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 export default function EventoDetalleScreen({ route }) {
   const { id } = route.params;
@@ -37,7 +38,7 @@ export default function EventoDetalleScreen({ route }) {
         entradaId,
         cantidad,
       });
-      Alert.alert("¡Compra realizada!", `Total: $${compra.total}`);
+      Alert.alert("¡Compra realizada!", `Total: $${formatearPrecio(compra.total)}`);
       setCantidad(1);
       cargar();
     } catch (e) {
@@ -51,7 +52,7 @@ export default function EventoDetalleScreen({ route }) {
   return (
     <ScrollView contentContainerStyle={styles.contenedor}>
       <Text style={styles.titulo}>{evento.nombre}</Text>
-      <Text>{evento.fecha} · {evento.categoria?.nombre}</Text>
+      <Text>{formatearFecha(evento.fecha)} · {evento.categoria?.nombre}</Text>
       <Text style={styles.descripcion}>{evento.descripcion}</Text>
 
       {organizador && (
@@ -70,7 +71,7 @@ export default function EventoDetalleScreen({ route }) {
           onPress={() => setEntradaId(tipo.id)}
           style={[styles.entrada, entradaId === tipo.id && styles.entradaActiva]}
         >
-          <Text style={styles.nombreEntrada}>{tipo.nombre} · ${tipo.precio}</Text>
+          <Text style={styles.nombreEntrada}>{tipo.nombre} · {formatearPrecio(tipo.precio)}</Text>
           <Text>{tipo.ubicacion} · quedan {tipo.cupoDisponible}</Text>
         </Pressable>
       ))}

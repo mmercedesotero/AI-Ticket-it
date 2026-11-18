@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { enviar, get, USUARIO_ID } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 const COLORES = {
   PENDIENTE_PAGO: "#e0a800",
@@ -42,7 +43,7 @@ export default function MisComprasScreen({ navigation }) {
   const pagar = (compra) => {
     Alert.alert(
       "Confirmar pago",
-      `¿Pagar $${compra.total} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
+      `¿Pagar $${formatearPrecio(compra.total)} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
       [
         { text: "No", style: "cancel" },
         {
@@ -83,13 +84,13 @@ export default function MisComprasScreen({ navigation }) {
             </View>
           </View>
 
-          <Text>{item.evento.fecha}</Text>
+          <Text>{formatearFecha(item.evento.fecha)}</Text>
           <Text>
-            {item.cantidad} × {item.tipoEntrada.nombre} · ${item.total}
+            {item.cantidad} × {item.tipoEntrada.nombre} · {formatearPrecio(item.total)}
           </Text>
             {item.estado === "PENDIENTE_PAGO" && (
             <Pressable style={styles.pagar} onPress={() => pagar(item)}>
-              <Text style={styles.pagarTexto}>Pagar ${item.total}</Text>
+              <Text style={styles.pagarTexto}>Pagar {formatearPrecio(item.total)}</Text>
             </Pressable>
           )}
 

@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { enviar, get } from "../api";
+import { formatearFecha, formatearPrecio } from "../formato"
 
 export default function ChatScreen({ route }) {
   const { compraId } = route.params;
