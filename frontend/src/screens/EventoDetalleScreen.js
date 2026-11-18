@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { enviar, get, USUARIO_ID } from "../api";
-import { formatearFecha, formatearPrecio } from "../formato"
+import { formatearFecha, formatearPrecio, yaSeRealizo } from "../formato"
 
 export default function EventoDetalleScreen({ route }) {
   const { id } = route.params;
@@ -30,24 +30,40 @@ export default function EventoDetalleScreen({ route }) {
     cargar();
   }, [cargar]);
 
-  const comprar = async () => {
-    try {
-      const compra = await enviar("POST", "/compras", {
-        usuarioId: USUARIO_ID,
-        eventoId: evento.id,
-        entradaId,
-        cantidad,
-      });
-      Alert.alert("¡Compra realizada!", `Total: $${formatearPrecio(compra.total)}`);
-      setCantidad(1);
-      cargar();
-    } catch (e) {
-      Alert.alert("No se pudo comprar", e.message);
-    }
-  };
+const comprar = () => {
+  const entrada = evento.tiposEntrada.find((t) => t.id === entradaId);
+
+  Alert.alert(
+    "Confirmar compra",
+    `¿Desea comprar ${cantidad} para ${entrada.nombre} en el evento ${evento.nombre} por ${formatearPrecio(entrada.precio * cantidad)}?`,
+    [
+      { text: "No", style: "cancel" },
+      {
+        text: "Sí, comprar",
+        onPress: async () => {
+          try {
+            const compra = await enviar("POST", "/compras", {
+              usuarioId: USUARIO_ID,
+              eventoId: evento.id,
+              entradaId,
+              cantidad,
+            });
+            Alert.alert("¡Compra realizada!", `Total: ${formatearPrecio(compra.total)}`);
+            setCantidad(1);
+            cargar();
+          } catch (e) {
+            Alert.alert("No se pudo comprar", e.message);
+          }
+        },
+      },
+    ]
+  );
+};
 
   if (error) return <Text style={styles.centro}>Error: {error}</Text>;
   if (!evento) return <Text style={styles.centro}>Cargando...</Text>;
+
+  const finalizado = yaSeRealizo(evento.fecha);
 
   return (
     <ScrollView contentContainerStyle={styles.contenedor}>
@@ -63,7 +79,7 @@ export default function EventoDetalleScreen({ route }) {
             : "Sin reseñas"}
         </Text>
       )}
-
+    {!finalizado && ( <>
       <Text style={styles.seccion}>Entradas</Text>
       {evento.tiposEntrada.map((tipo) => (
         <Pressable
@@ -89,13 +105,20 @@ export default function EventoDetalleScreen({ route }) {
       {entradaId === null && (
         <Text style={styles.aviso}>Elegí un tipo de entrada para comprar</Text>
       )}
+      </> )}
 
       <Pressable
-        style={[styles.comprar, entradaId === null && styles.comprarInactivo]}
-        disabled={entradaId === null}
+        style={[
+          styles.comprar,
+          entradaId === null && styles.comprarInactivo,
+          finalizado && styles.noDisponible,
+        ]}
+        disabled={entradaId === null || finalizado}
         onPress={comprar}
       >
-        <Text style={styles.comprarTexto}>Comprar</Text>
+        <Text style={styles.comprarTexto}>
+          {finalizado ? "No disponible a la venta" : "Comprar"}
+        </Text>
       </Pressable>
 
       {organizador && organizador.resenias.length > 0 && (
@@ -136,4 +159,5 @@ const styles = StyleSheet.create({
   resenia: { borderWidth: 1, borderColor: "#eee", borderRadius: 10, padding: 10, marginBottom: 8 },
   autor: { color: "#666", marginTop: 2 },
   centro: { marginTop: 100, textAlign: "center" },
+  noDisponible: { backgroundColor: "#921e12" },
 });

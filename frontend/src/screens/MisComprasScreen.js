@@ -15,14 +15,27 @@ const COLORES = {
 export default function MisComprasScreen({ navigation }) {
   const [compras, setCompras] = useState([]);
   const [error, setError] = useState(null);
+  const [refrescando, setRefrescando] = useState(false);
 
-  const cargar = useCallback(() => {
-    get(`/compras?usuarioId=${USUARIO_ID}`)
-      .then(setCompras)
-      .catch((e) => setError(e.message));
-  }, []);
+  const cargar = useCallback(
+    () =>
+      get(`/compras?usuarioId=${USUARIO_ID}`)
+        .then(setCompras)
+        .catch((e) => setError(e.message)),
+    []
+  );
 
-  useFocusEffect(cargar);
+  useFocusEffect(
+    useCallback(() => {
+      cargar();
+    }, [cargar])
+  );
+
+  const refrescar = async () => {
+    setRefrescando(true);
+    await Promise.all([cargar(), new Promise((r) => setTimeout(r, 500))]);
+    setRefrescando(false);
+  };
 
   const cancelar = (compra) => {
     Alert.alert("Cancelar compra", `¿Cancelar tu compra de ${compra.evento.nombre}?`, [
@@ -43,7 +56,7 @@ export default function MisComprasScreen({ navigation }) {
   const pagar = (compra) => {
     Alert.alert(
       "Confirmar pago",
-      `¿Pagar $${formatearPrecio(compra.total)} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
+      `¿Pagar ${formatearPrecio(compra.total)} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
       [
         { text: "No", style: "cancel" },
         {
@@ -71,7 +84,9 @@ export default function MisComprasScreen({ navigation }) {
 
   return (
     <FlatList
-      data={compras}
+        data={compras}
+        refreshing={refrescando}
+        onRefresh={refrescar}
       keyExtractor={(compra) => String(compra.id)}
       contentContainerStyle={styles.lista}
       ListEmptyComponent={<Text style={styles.centro}>Todavía no compraste entradas</Text>}

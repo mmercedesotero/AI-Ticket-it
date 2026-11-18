@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { get } from "../api";
-import { formatearFecha, formatearPrecio } from "../formato"
+import { formatearFecha, formatearPrecio, yaSeRealizo } from "../formato"
+
 
 const ORDENES = [
   { clave: "fecha", etiqueta: "Fecha" },
@@ -74,6 +75,7 @@ export default function EventosScreen({ navigation }) {
           >
             <Text style={styles.nombre}>{item.nombre}</Text>
             <Text>{formatearFecha(item.fecha)} · {item.categoria?.nombre}</Text>
+            {yaSeRealizo(item.fecha) && <Text style={styles.finalizado}>Finalizado</Text>}
             {precioDesde(item) !== null && <Text>Desde {formatearPrecio(precioDesde(item))}</Text>}
           </Pressable>
         )}
@@ -102,4 +104,5 @@ const styles = StyleSheet.create({
   tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 10 },
   nombre: { fontSize: 18, fontWeight: "600" },
   centro: { marginTop: 40, textAlign: "center" },
+  finalizado: { color: "#ac4343", fontWeight: "bold", marginTop: 2 },
 });
