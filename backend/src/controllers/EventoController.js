@@ -10,9 +10,8 @@ class EventoController {
   }
 
   obtenerTodos(req, res) {
-    res.json(this.eventoService.obtenerTodos());
+    res.json(this.eventoService.buscar(req.query));
   }
-
   obtenerPorId(req, res) {
     const evento = this.eventoService.obtenerPorId(req.params.id);
 

@@ -5,19 +5,19 @@ const Evento = require("./models/Evento");
 const Entrada = require("./models/Entrada");
 const EstadoCompra = require("./models/EstadoCompra");
 const CompraService = require("./services/CompraService");
-const { usuarioRepository, eventoRepository, organizadorRepository, compraRepository } = require("./container");
+const { usuarioRepository, eventoRepository, organizadorRepository, compraRepository, categoriaRepository } = require("./container");
+
 
 function cargarDatos() {
   const ana = usuarioRepository.save(new Usuario(undefined, "Ana", "Perez"));
   const mer = usuarioRepository.save(new Usuario(undefined, "Mer", "Perez"));
   const tomas = usuarioRepository.save(new Usuario(undefined, "Tomas", "Gomez"));
+  const recital = categoriaRepository.save(new Categoria(undefined, "Recital", "Musica en vivo"));
+  const teatro = categoriaRepository.save(new Categoria(undefined, "Teatro", "Obras y espectaculos"));
+  const festival = categoriaRepository.save(new Categoria(undefined, "Festival", "Festivales de varios dias"));
 
   const liveNation = organizadorRepository.save(new Organizador(undefined, "Live Nation"));
   const teatroBA = organizadorRepository.save(new Organizador(undefined, "Teatro BA"));
-
-  const recital = new Categoria(1, "Recital", "Musica en vivo");
-  const teatro = new Categoria(2, "Teatro", "Obras y espectaculos");
-  const festival = new Categoria(3, "Festival", "Festivales de varios dias");
 
   const eventosIniciales = [
     { nombre: "Coldplay", fecha: "2027-01-10", descripcion: "Gira mundial", categoria: recital, organizador: liveNation,
