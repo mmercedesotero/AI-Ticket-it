@@ -1,19 +1,20 @@
 import { useCallback, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { enviar, get } from "../api";
-import { formatearFecha, formatearPrecio } from "../formato"
-
-const COLORES = {
-  PENDIENTE_PAGO: "#e0a800",
-  CONFIRMADA: "#2e9e4f",
-  UTILIZADA: "#2f6fdb",
-  CANCELADA: "#888888",
-  REEMBOLSADA: "#8a4fc7",
-};
+import { get } from "../api";
+import TicketCard from "../componentes/TicketCard";
+import { iconoDe } from "../componentes/TarjetaEvento";
+import { imagenDe } from "../imagenes";
+import { ESTADOS, esPasada, textoDias } from "../compras";
+import { colores } from "../tema";
+import { formatearFechaLarga, formatearPrecio } from "../formato";
 
 export default function MisComprasScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [compras, setCompras] = useState([]);
+  const [pestania, setPestania] = useState("activas");
   const [error, setError] = useState(null);
   const [refrescando, setRefrescando] = useState(false);
 
@@ -37,125 +38,169 @@ export default function MisComprasScreen({ navigation }) {
     setRefrescando(false);
   };
 
-  const cancelar = (compra) => {
-    Alert.alert("Cancelar compra", `¿Cancelar tu compra de ${compra.evento.nombre}?`, [
-      { text: "No", style: "cancel" },
-      {
-        text: "Sí, cancelar",
-        onPress: async () => {
-          try {
-            await enviar("PUT", `/compras/${compra.id}/cancelar`);
-            cargar();
-          } catch (e) {
-            Alert.alert("No se pudo cancelar", e.message);
-          }
-        },
-      },
-    ]);
-  };
-  const pagar = (compra) => {
-    Alert.alert(
-      "Confirmar pago",
-      `¿Pagar ${formatearPrecio(compra.total)} por ${compra.cantidad} × ${compra.tipoEntrada.nombre} de ${compra.evento.nombre}?`,
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Sí, pagar",
-          onPress: async () => {
-            try {
-              await enviar("PUT", `/compras/${compra.id}/pagar`);
-              cargar();
-            } catch (e) {
-              Alert.alert("No se pudo pagar", e.message);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const puedeCancelar = (compra) =>
-    compra.estado === "PENDIENTE_PAGO" || compra.estado === "CONFIRMADA";
-
-  const textoDias = (dias) =>
-    dias === 0 ? "¡Es hoy!" : dias === 1 ? "Falta 1 día" : `Faltan ${dias} días`;
-
   if (error) return <Text style={styles.centro}>Error: {error}</Text>;
 
+  const activas = compras.filter((c) => !esPasada(c));
+  const pasadas = compras.filter(esPasada);
+  const visibles = pestania === "activas" ? activas : pasadas;
+
   return (
-    <FlatList
-        data={compras}
+    <View style={[styles.contenedor, { paddingTop: insets.top + 8 }]}>
+      <Text style={styles.titulo}>Mis Compras</Text>
+
+      <View style={styles.pestanias}>
+        <Pestania texto={`Activas (${activas.length})`} activa={pestania === "activas"} onPress={() => setPestania("activas")} />
+        <Pestania texto={`Pasadas (${pasadas.length})`} activa={pestania === "pasadas"} onPress={() => setPestania("pasadas")} />
+      </View>
+
+      <FlatList
+        data={visibles}
         refreshing={refrescando}
         onRefresh={refrescar}
-      keyExtractor={(compra) => String(compra.id)}
-      contentContainerStyle={styles.lista}
-      ListEmptyComponent={<Text style={styles.centro}>Todavía no compraste entradas</Text>}
-      renderItem={({ item }) => (
-        <View style={styles.tarjeta}>
-          <View style={styles.encabezado}>
-            <Text style={styles.nombre}>{item.evento.nombre}</Text>
-            <View style={[styles.estado, { backgroundColor: COLORES[item.estado] }]}>
-              <Text style={styles.estadoTexto}>{item.estado.replace("_", " ")}</Text>
+        keyExtractor={(compra) => String(compra.id)}
+        contentContainerStyle={styles.lista}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={styles.centro}>
+            {pestania === "activas" ? "No tenés entradas activas" : "Todavía no hay compras pasadas"}
+          </Text>
+        }
+        renderItem={({ item }) => (
+          <Pressable onPress={() => navigation.navigate("Entrada", { compraId: item.id })}>
+            <Entrada compra={item} navigation={navigation} />
+          </Pressable>
+        )}
+      />
+    </View>
+  );
+}
+
+// Una entrada en la lista: tocarla abre su pantalla con todos los datos.
+function Entrada({ compra, navigation }) {
+  const estado = ESTADOS[compra.estado];
+  const pendiente = compra.estado === "PENDIENTE_PAGO" && !esPasada(compra);
+
+  return (
+    <TicketCard
+      arriba={
+        <View style={styles.arribaFila}>
+          <View style={styles.info}>
+            <View style={[styles.estado, { backgroundColor: estado.color }]}>
+              <Text style={styles.estadoTexto}>{estado.texto}</Text>
             </View>
+            <Text style={styles.nombre} numberOfLines={2}>{compra.evento.nombre}</Text>
+            <Linea icono="calendar-outline" texto={formatearFechaLarga(compra.evento.fecha)} />
+            <Linea icono="business-outline" texto={compra.evento.organizador?.nombre ?? "Sin organizador"} />
+            {compra.diasParaEvento !== null && compra.diasParaEvento !== undefined && (
+              <Text style={styles.dias}>{textoDias(compra.diasParaEvento)}</Text>
+            )}
           </View>
 
-          <Text>{formatearFecha(item.evento.fecha)}</Text>
-          <Text>
-            {item.cantidad} × {item.tipoEntrada.nombre} · {formatearPrecio(item.total)}
-          </Text>
-            {item.estado === "PENDIENTE_PAGO" && (
-            <Pressable style={styles.pagar} onPress={() => pagar(item)}>
-              <Text style={styles.pagarTexto}>Pagar {formatearPrecio(item.total)}</Text>
-            </Pressable>
-          )}
+          <View style={styles.foto}>
+            {imagenDe(compra.evento) ? (
+              <Image source={imagenDe(compra.evento)} style={styles.fotoImagen} resizeMode="cover" />
+            ) : (
+              <Ionicons name={iconoDe(compra.evento)} size={30} color={colores.acento} />
+            )}
+          </View>
+        </View>
+      }
+      abajo={
+        <View>
+          <View style={styles.abajoFila}>
+            <View style={styles.entrada}>
+              <Ionicons name="ticket-outline" size={16} color={colores.indigo} />
+              <Text style={styles.entradaTexto}>{compra.cantidad} × {compra.tipoEntrada.nombre}</Text>
+            </View>
+            <Text style={styles.total}>{formatearPrecio(compra.total)}</Text>
+          </View>
 
-          {item.diasParaEvento !== null && (
-            <Text style={styles.dias}>{textoDias(item.diasParaEvento)}</Text>
-          )}
-          
+          {pendiente && (
             <Pressable
-            style={styles.chat}
-            onPress={() => navigation.navigate("Chat", { compraId: item.id })}
-          >
-            <Text style={styles.chatTexto}>Chat con el organizador</Text>
-            </Pressable>
-        {item.estado === "UTILIZADA" && (
-            <Pressable
-              style={styles.puntuar}
+              style={styles.botonCoral}
               onPress={() =>
-                navigation.navigate("Resena", { compraId: item.id, evento: item.evento.nombre })
+                navigation.navigate("Pagar", {
+                  compraId: compra.id,
+                  total: compra.total,
+                  titulo: `${compra.cantidad} × ${compra.tipoEntrada.nombre} · ${compra.evento.nombre}`,
+                })
               }
             >
-              <Text style={styles.puntuarTexto}>Puntuar evento</Text>
+              <Text style={styles.botonCoralTexto}>Pagar {formatearPrecio(compra.total)}</Text>
             </Pressable>
-        )}
+          )}
 
-          {puedeCancelar(item) && (
-            <Pressable style={styles.cancelar} onPress={() => cancelar(item)}>
-              <Text style={styles.cancelarTexto}>Cancelar compra</Text>
+          {compra.estado === "UTILIZADA" && (
+            <Pressable
+              style={styles.puntuar}
+              onPress={() => navigation.navigate("Resena", { compraId: compra.id, evento: compra.evento.nombre })}
+            >
+              <Ionicons name="star" size={16} color="#B45309" />
+              <Text style={styles.puntuarTexto}>Puntuar evento</Text>
             </Pressable>
           )}
         </View>
-      )}
+      }
     />
   );
 }
 
+function Pestania({ texto, activa, onPress }) {
+  return (
+    <Pressable style={[styles.pestania, activa && styles.pestaniaActiva]} onPress={onPress}>
+      <Text style={[styles.pestaniaTexto, activa && styles.pestaniaTextoActivo]}>{texto}</Text>
+    </Pressable>
+  );
+}
+
+function Linea({ icono, texto }) {
+  return (
+    <View style={styles.linea}>
+      <Ionicons name={icono} size={14} color={colores.textoSuave} />
+      <Text style={styles.lineaTexto} numberOfLines={1}>{texto}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-    lista: { padding: 16 },
-    tarjeta: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, marginBottom: 12 },
-    encabezado: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-    nombre: { fontSize: 18, fontWeight: "600", flexShrink: 1 },
-    estado: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-    estadoTexto: { color: "#fff", fontSize: 12, fontWeight: "bold" },
-    dias: { marginTop: 6, fontWeight: "bold", color: "#2e9e4f" },
-    cancelar: { marginTop: 10, borderWidth: 1, borderColor: "#c0392b", borderRadius: 8, padding: 10, alignItems: "center" },
-    cancelarTexto: { color: "#c0392b", fontWeight: "600" },
-    centro: { marginTop: 100, textAlign: "center" },
-    chat: { marginTop: 10, borderWidth: 1, borderColor: "#2f6fdb", borderRadius: 8, padding: 10, alignItems: "center" },
-    chatTexto: { color: "#2f6fdb", fontWeight: "600" },
-    puntuar: { marginTop: 10, borderWidth: 1, borderColor: "#f5a623", borderRadius: 8, padding: 10, alignItems: "center" },
-    puntuarTexto: { color: "#c47f00", fontWeight: "600" },
-    pagar: { marginTop: 10, backgroundColor: "#2e9e4f", borderRadius: 8, padding: 10, alignItems: "center" },
-    pagarTexto: { color: "#fff", fontWeight: "bold" },
+  contenedor: { flex: 1, backgroundColor: colores.fondo },
+  titulo: { fontSize: 26, fontWeight: "800", color: colores.indigo, paddingHorizontal: 16, marginBottom: 12 },
+
+  pestanias: { flexDirection: "row", borderBottomWidth: 1, borderColor: colores.borde, backgroundColor: colores.blanco },
+  pestania: { flex: 1, alignItems: "center", paddingVertical: 12, borderBottomWidth: 2, borderColor: "transparent" },
+  pestaniaActiva: { borderColor: colores.acento },
+  pestaniaTexto: { color: colores.textoSuave, fontWeight: "600" },
+  pestaniaTextoActivo: { color: colores.indigo, fontWeight: "800" },
+
+  lista: { padding: 16 },
+
+  arribaFila: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
+  info: { flex: 1 },
+  nombre: { fontSize: 17, fontWeight: "800", color: colores.indigo, marginBottom: 4 },
+  linea: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
+  lineaTexto: { color: colores.textoSuave, fontSize: 13, flexShrink: 1 },
+  dias: { color: colores.exito, fontWeight: "700", fontSize: 13, marginTop: 6 },
+
+  foto: {
+    width: 92, height: 92, borderRadius: 10, overflow: "hidden", backgroundColor: colores.indigo,
+    alignItems: "center", justifyContent: "center",
+  },
+  fotoImagen: { width: "100%", height: "100%" },
+  estado: { alignSelf: "flex-start", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, marginBottom: 6 },
+  estadoTexto: { color: colores.blanco, fontSize: 11, fontWeight: "700" },
+
+  abajoFila: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  entrada: { flexDirection: "row", alignItems: "center", gap: 8 },
+  entradaTexto: { fontWeight: "600", color: colores.indigo },
+  total: { fontWeight: "800", color: colores.indigo, fontSize: 16 },
+
+  botonCoral: { backgroundColor: colores.acento, borderRadius: 10, padding: 12, alignItems: "center", marginTop: 12 },
+  botonCoralTexto: { color: colores.blanco, fontWeight: "700" },
+  puntuar: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    backgroundColor: "#FEF3C7", borderWidth: 1, borderColor: "#FCD34D", borderRadius: 10, padding: 12, marginTop: 12,
+  },
+  puntuarTexto: { color: "#B45309", fontWeight: "700" },
+
+  centro: { marginTop: 60, textAlign: "center", color: colores.textoSuave },
 });

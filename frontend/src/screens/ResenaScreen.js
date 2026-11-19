@@ -1,5 +1,8 @@
+import { alerta } from "../dialogo";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable, StyleSheet, Text, TextInput, View,
+} from "react-native";
 import { enviar } from "../api";
 import { formatearFecha, formatearPrecio } from "../formato"
 
@@ -11,11 +14,11 @@ export default function ResenaScreen({ route, navigation }) {
   const publicar = async () => {
     try {
       await enviar("POST", "/resenias", { compraId, puntuacion, detalle });
-      Alert.alert("¡Gracias!", "Tu reseña fue publicada", [
+      alerta("¡Gracias!", "Tu reseña fue publicada", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (e) {
-      Alert.alert("No se pudo publicar", e.message);
+      alerta("No se pudo publicar", e.message);
     }
   };
 

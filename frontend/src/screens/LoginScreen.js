@@ -1,76 +1,88 @@
 import { useState } from "react";
 import {
-  Alert, KeyboardAvoidingView, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput,
+  KeyboardAvoidingView, Platform, Pressable,
+  ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { enviar } from "../api";
+import { alerta } from "../dialogo";
 import { useSesion } from "../sesion";
+import Logo from "../componentes/Logo";
+import { colores, estilosBase } from "../tema";
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const { iniciarSesion } = useSesion();
-  const [registrando, setRegistrando] = useState(false);
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
-  const enviarFormulario = async () => {
+  const entrar = async () => {
+    if (enviando) return;
+
+    setEnviando(true);
     try {
-      const cuerpo = registrando
-        ? { nombre, apellido, email, password }
-        : { email, password };
-      const respuesta = await enviar("POST", registrando ? "/auth/registro" : "/auth/login", cuerpo);
-      iniciarSesion(respuesta);
+      iniciarSesion(await enviar("POST", "/auth/login", { email, password }));
     } catch (e) {
-      Alert.alert(registrando ? "No se pudo registrar" : "No se pudo iniciar sesión", e.message);
+      alerta("No se pudo iniciar sesión", e.message);
+      setEnviando(false);
     }
   };
 
   return (
     <KeyboardAvoidingView style={styles.fondo} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.contenedor} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titulo}>AI Ticket It</Text>
-        <Text style={styles.subtitulo}>
-          {registrando ? "Creá tu cuenta de comprador" : "Iniciá sesión"}
-        </Text>
+        <View style={styles.logo}>
+          <Logo tamano={30} />
+        </View>
 
-        {registrando && (
-          <>
-            <TextInput style={styles.input} placeholder="Nombre" value={nombre} onChangeText={setNombre} />
-            <TextInput style={styles.input} placeholder="Apellido" value={apellido} onChangeText={setApellido} />
-          </>
-        )}
+        <Text style={styles.bienvenida}>¡Te damos la bienvenida!</Text>
+        <Text style={styles.titulo}>Iniciar Sesión</Text>
 
+        <Text style={styles.label}>Correo electrónico</Text>
         <TextInput
-          style={styles.input}
-          placeholder="Email"
+          style={styles.campo}
+          placeholder="ejemplo@correo.com"
+          placeholderTextColor={colores.textoPlaceholder}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
 
-        <Pressable style={styles.boton} onPress={enviarFormulario}>
-          <Text style={styles.botonTexto}>{registrando ? "Registrarme" : "Entrar"}</Text>
+        <Text style={styles.label}>Contraseña</Text>
+        <View style={styles.campoConIcono}>
+          <TextInput
+            style={styles.inputPassword}
+            placeholder="Tu contraseña"
+            placeholderTextColor={colores.textoPlaceholder}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!verPassword}
+            autoCapitalize="none"
+          />
+          <Pressable onPress={() => setVerPassword(!verPassword)} hitSlop={10}>
+            <Ionicons name={verPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colores.textoSuave} />
+          </Pressable>
+        </View>
+
+        <Pressable style={styles.olvide} onPress={() => navigation.navigate("Recuperar")} hitSlop={8}>
+          <Text style={styles.enlace}>¿Olvidaste tu contraseña?</Text>
         </Pressable>
 
-        <Pressable onPress={() => setRegistrando(!registrando)}>
-          <Text style={styles.enlace}>
-            {registrando ? "Ya tengo cuenta: iniciar sesión" : "No tengo cuenta: registrarme"}
+        <Pressable
+          style={[estilosBase.botonPrimario, styles.boton, enviando && styles.enviando]}
+          disabled={enviando}
+          onPress={entrar}
+        >
+          <Text style={estilosBase.botonPrimarioTexto}>{enviando ? "Ingresando..." : "Ingresar"}</Text>
+        </Pressable>
+
+        <Text style={styles.pie}>
+          ¿No tenés cuenta?{" "}
+          <Text style={styles.enlace} onPress={() => navigation.navigate("Registro")}>
+            Registrate
           </Text>
-        </Pressable>
-
-        <Text style={styles.ayuda}>
-          Cuentas de prueba (contraseña 123456):{"\n"}
-          Comprador: ana@mail.com{"\n"}
-          Organizador: live@mail.com
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -78,13 +90,18 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  fondo: { flex: 1, backgroundColor: "#fff" },
-  contenedor: { flexGrow: 1, justifyContent: "center", padding: 24 },
-  titulo: { fontSize: 32, fontWeight: "bold", textAlign: "center" },
-  subtitulo: { textAlign: "center", color: "#666", marginBottom: 24, marginTop: 4 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, marginBottom: 10 },
-  boton: { backgroundColor: "#222", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 6 },
-  botonTexto: { color: "#fff", fontWeight: "bold" },
-  enlace: { color: "#2f6fdb", textAlign: "center", marginTop: 16, fontWeight: "600" },
-  ayuda: { color: "#888", textAlign: "center", marginTop: 32, fontSize: 12, lineHeight: 18 },
+  fondo: { flex: 1, backgroundColor: colores.blanco },
+  contenedor: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 32 },
+  logo: { alignItems: "center", marginBottom: 40 },
+  bienvenida: { textAlign: "center", color: colores.textoSuave, fontSize: 14 },
+  titulo: { textAlign: "center", fontSize: 28, fontWeight: "800", color: colores.indigo, marginTop: 4, marginBottom: 28 },
+  label: { fontWeight: "600", color: colores.indigo, marginBottom: 6, marginTop: 4 },
+  campo: { ...estilosBase.campo, marginBottom: 12 },
+  campoConIcono: { ...estilosBase.campo, flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  inputPassword: { flex: 1, fontSize: 15, color: colores.indigo, padding: 0 },
+  olvide: { alignSelf: "flex-end", marginBottom: 8 },
+  boton: { marginTop: 12 },
+  enviando: { opacity: 0.6 },
+  pie: { textAlign: "center", color: colores.textoSuave, marginTop: 28 },
+  enlace: { color: colores.acento, fontWeight: "700" },
 });
