@@ -12,6 +12,8 @@ const router = express.Router();
 
 router.post("/registro", controllers.registrar);
 router.post("/login", controllers.login);
+router.post("/recuperar", controllers.recuperar);
+router.post("/restablecer", controllers.restablecer);
 router.get("/perfil", auth, controllers.perfil);
 
 module.exports = router;

@@ -19,6 +19,8 @@ class Compra {
     this.total = total;
     this.estado = estado;
     this.mensajes = mensajes;
+    // Cada cambio de estado queda registrado con su fecha (sirve para mostrar el seguimiento del pedido).
+    this.historial = [{ estado, fechaHora: new Date() }];
   }
 
   actualizarEstado(estadoCompra) {
@@ -27,6 +29,7 @@ class Compra {
     }
 
     this.estado = estadoCompra;
+    this.historial.push({ estado: estadoCompra, fechaHora: new Date() });
   }
   diasParaElEvento() {
     const hoy = new Date();

@@ -7,11 +7,12 @@ class Usuario {
     this.passwordHash = passwordHash;
     this.favoritos = [];
     this.entradasCompradas = [];
+    this.tarjetas = [];
   }
 
-  // Nunca devolvemos el hash de la contraseña en las respuestas.
+  // Nunca devolvemos el hash de la contraseña ni las tarjetas en las respuestas.
   toJSON() {
-    const { passwordHash, ...datos } = this;
+    const { passwordHash, tarjetas, ...datos } = this;
     return datos;
   }
 }

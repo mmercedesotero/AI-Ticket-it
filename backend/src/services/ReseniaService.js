@@ -5,7 +5,8 @@ const ValidationError = require("../errors/ValidationError");
 const ForbiddenError = require("../errors/ForbiddenError");
 
 class ReseniaService {
-  constructor(reseniaRepository, compraRepository, organizadorRepository) {
+  constructor(reseniaRepository, compraRepository, organizadorRepository, notificacionService) {
+    this.notificacionService = notificacionService;
     this.reseniaRepository = reseniaRepository;
     this.compraRepository = compraRepository;
     this.organizadorRepository = organizadorRepository;
@@ -46,7 +47,17 @@ class ReseniaService {
       puntuacion
     );
 
-    return this.aVista(this.reseniaRepository.save(resenia));
+    this.reseniaRepository.save(resenia);
+
+    if (this.notificacionService && compra.evento.organizador) {
+      this.notificacionService.crear("ORGANIZADOR", compra.evento.organizador.id, {
+        tipo: "RESENIA",
+        titulo: "Nueva reseña",
+        mensaje: `${compra.comprador.nombre} puntuó ${compra.evento.nombre} con ${puntuacion} ${puntuacion === 1 ? "estrella" : "estrellas"}.`,
+      });
+    }
+
+    return this.aVista(resenia);
   }
 
   obtenerTodas({ organizadorId } = {}) {

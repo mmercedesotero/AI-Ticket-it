@@ -28,8 +28,10 @@ class EventoService {
     eventoRepository,
     reseniaRepository,
     categoriaRepository,
-    organizadorRepository
+    organizadorRepository,
+    notificacionService
   ) {
+    this.notificacionService = notificacionService;
     this.eventoRepository = eventoRepository;
     this.reseniaRepository = reseniaRepository;
     this.categoriaRepository = categoriaRepository;
@@ -156,6 +158,14 @@ class EventoService {
 
     this.eventoRepository.save(evento);
     organizador.eventos.push(evento);
+
+    if (this.notificacionService) {
+      this.notificacionService.crear("ORGANIZADOR", organizador.id, {
+        tipo: "EVENTO_PUBLICADO",
+        titulo: "Evento publicado",
+        mensaje: `${evento.nombre} ya está a la venta.`,
+      });
+    }
 
     return evento;
   }

@@ -3,9 +3,9 @@ const EventoController = require("../controllers/EventoController");
 const EventoRepository = require("../repositories/EventoRepository");
 const EventoService = require("../services/EventoService");
 const auth = require("../middlewares/auth");
-const { eventoRepository, reseniaRepository, categoriaRepository, organizadorRepository } = require("../container");
+const { eventoRepository, reseniaRepository, categoriaRepository, organizadorRepository, notificacionService } = require("../container");
 
-const eventoService = new EventoService(eventoRepository, reseniaRepository, categoriaRepository, organizadorRepository);
+const eventoService = new EventoService(eventoRepository, reseniaRepository, categoriaRepository, organizadorRepository, notificacionService);
 const controllers = new EventoController(eventoService);
 
 const router = express.Router();

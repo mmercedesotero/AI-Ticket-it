@@ -52,12 +52,23 @@ function cargarDatos() {
   });
   const [coldplay, jazz, hamlet, lolla, nocheRock, cosquin ] = eventos;
 
+  // Favoritos de ejemplo para Ana.
+  ana.favoritos.push(coldplay.id, jazz.id, lolla.id);
+
   const compraService = new CompraService(compraRepository, usuarioRepository, eventoRepository);
   const comprar = (usuario, evento, entradaId, cantidad, estado) => {
     const compra = compraService.comprarEntrada({
       usuarioId: usuario.id, eventoId: evento.id, entradaId, cantidad,
     });
+    // Una entrada utilizada primero estuvo confirmada.
+    if (estado === EstadoCompra.UTILIZADA) compra.actualizarEstado(EstadoCompra.CONFIRMADA);
     if (estado) compra.actualizarEstado(estado);
+
+    // Fechas del historial: las compras ya utilizadas son más viejas que las demás.
+    const base = estado === EstadoCompra.UTILIZADA ? 12 : 3;
+    compra.historial.forEach((cambio, i) => {
+      cambio.fechaHora = new Date(Date.now() - Math.max(base - i, 0) * 24 * 60 * 60 * 1000);
+    });
     return compra;
   };
   

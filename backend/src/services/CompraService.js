@@ -6,7 +6,8 @@ const Mensaje = require("../models/Mensaje");
 const ForbiddenError = require("../errors/ForbiddenError");
 
 class CompraService {
-  constructor(compraRepository, usuarioRepository, eventoRepository) {
+  constructor(compraRepository, usuarioRepository, eventoRepository, notificacionService) {
+    this.notificacionService = notificacionService;
     this.compraRepository = compraRepository;
     this.usuarioRepository = usuarioRepository;
     this.eventoRepository = eventoRepository;
@@ -41,6 +42,12 @@ class CompraService {
     return this.compraRepository.delete(id);
   }
 
+  // Las notificaciones son opcionales (los seeds crean compras sin ellas).
+  notificar(rol, destinatario, tipo, titulo, mensaje) {
+    if (this.notificacionService && destinatario)
+      this.notificacionService.crear(rol, destinatario.id, { tipo, titulo, mensaje });
+  }
+
   comprarEntrada({ usuarioId, eventoId, entradaId, cantidad } = {}) {
     const usuario = this.usuarioRepository.findById(usuarioId);
     if (!usuario) throw new NotFoundError("Usuario no encontrado");
@@ -66,7 +73,28 @@ class CompraService {
     const compra = new Compra(undefined, usuario, evento, entrada, cantidad, total);
     entrada.cupoDisponible -= cantidad;
 
-    return this.compraRepository.save(compra);
+    this.compraRepository.save(compra);
+
+    this.notificar(
+      "COMPRADOR",
+      usuario,
+      "COMPRA",
+      "Compra realizada",
+      `Reservaste ${cantidad} × ${entrada.nombre} para ${evento.nombre}. Pagá para confirmarlas.`
+    );
+
+    // Al organizador solo se le avisa cuando se agota el evento (no por cada compra).
+    if (evento.tiposEntrada.every((tipo) => tipo.cupoDisponible === 0)) {
+      this.notificar(
+        "ORGANIZADOR",
+        evento.organizador,
+        "EVENTO_AGOTADO",
+        "¡Evento agotado!",
+        `Se vendieron todas las entradas de ${evento.nombre}.`
+      );
+    }
+
+    return compra;
   }
   obtenerPorUsuario(usuarioId) {
     const usuario = this.usuarioRepository.findById(usuarioId);
@@ -157,10 +185,20 @@ class CompraService {
     );
     compra.tipoEntrada.cupoDisponible += compra.cantidad;
 
+    this.notificar(
+      "COMPRADOR",
+      compra.comprador,
+      fuePagada ? "REEMBOLSO" : "CANCELACION",
+      fuePagada ? "Reembolso en camino" : "Compra cancelada",
+      fuePagada
+        ? `Cancelaste tu compra de ${compra.evento.nombre} y te reembolsamos el pago.`
+        : `Cancelaste tu compra de ${compra.evento.nombre}.`
+    );
+
     return compra;
   }
 
-  pagarCompra(id) {
+  pagarCompra(id, tarjeta) {
     const compra = this.compraRepository.findById(id);
     if (!compra) throw new NotFoundError("Compra no encontrada");
 
@@ -172,7 +210,29 @@ class CompraService {
         "No se puede pagar una compra de un evento que ya se realizó"
       );
 
+    if (!tarjeta) throw new ValidationError("Elegí una tarjeta para pagar");
+
+    // Simulación: las tarjetas que terminan en 0000 son rechazadas.
+    if (tarjeta.ultimos4 === "0000") {
+      this.notificar(
+        "COMPRADOR",
+        compra.comprador,
+        "PAGO_RECHAZADO",
+        "Pago rechazado",
+        `No pudimos cobrar tu compra de ${compra.evento.nombre}: la tarjeta no tiene fondos suficientes.`
+      );
+      throw new ValidationError("Pago rechazado: la tarjeta no tiene fondos suficientes");
+    }
+
     compra.actualizarEstado(EstadoCompra.CONFIRMADA);
+
+    this.notificar(
+      "COMPRADOR",
+      compra.comprador,
+      "PAGO_CONFIRMADO",
+      "Pago confirmado",
+      `Pagaste ${compra.cantidad} × ${compra.tipoEntrada.nombre} para ${compra.evento.nombre}. ¡Tus entradas están listas!`
+    );
 
     return compra;
   }

@@ -7,6 +7,9 @@ const errorHandler = require("./middlewares/errorHandler");
 const CategoriaRoutes = require("./routes/CategoriaRoutes");
 const ReseniaRoutes = require("./routes/ReseniaRoutes");
 const AuthRoutes = require("./routes/AuthRoutes");
+const FavoritoRoutes = require("./routes/FavoritoRoutes");
+const TarjetaRoutes = require("./routes/TarjetaRoutes");
+const NotificacionRoutes = require("./routes/NotificacionRoutes");
 
 const app = express();
 app.use(express.json());
@@ -18,6 +21,9 @@ app.use("/organizadores", OrganizadorRoutes)
 app.use("/compras", CompraRoutes)
 app.use("/categorias", CategoriaRoutes)
 app.use("/resenias", ReseniaRoutes)
+app.use("/favoritos", FavoritoRoutes)
+app.use("/tarjetas", TarjetaRoutes)
+app.use("/notificaciones", NotificacionRoutes)
 
 app.use(errorHandler);
 

@@ -2,11 +2,12 @@ const express = require("express");
 const CompraController = require("../controllers/CompraController");
 const CompraRepository = require("../repositories/CompraRepository");
 const CompraService = require("../services/CompraService");
+const TarjetaService = require("../services/TarjetaService");
 const auth = require("../middlewares/auth");
-const { compraRepository, usuarioRepository, eventoRepository } = require("../container");
+const { compraRepository, usuarioRepository, eventoRepository, notificacionService } = require("../container");
 
-const compraService = new CompraService(compraRepository, usuarioRepository, eventoRepository);
-const controllers = new CompraController(compraService);
+const compraService = new CompraService(compraRepository, usuarioRepository, eventoRepository, notificacionService);
+const controllers = new CompraController(compraService, new TarjetaService());
 
 const router = express.Router();
 router.use(auth);

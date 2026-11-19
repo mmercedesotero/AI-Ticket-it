@@ -12,5 +12,9 @@ const eventoRepository = new EventoRepository();
 const compraRepository = new CompraRepository();
 const organizadorRepository = new OrganizadorRepository();
 
+const NotificacionRepository = require("./repositories/NotificacionRepository");
+const NotificacionService = require("./services/NotificacionService");
+const notificacionService = new NotificacionService(new NotificacionRepository());
 
-module.exports = { usuarioRepository, eventoRepository, compraRepository, organizadorRepository, categoriaRepository, reseniaRepository };
+
+module.exports = { usuarioRepository, eventoRepository, compraRepository, organizadorRepository, categoriaRepository, reseniaRepository, notificacionService };

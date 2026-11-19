@@ -3,8 +3,9 @@ const NotFoundError = require("../errors/NotFoundError");
 const ValidationError = require("../errors/ValidationError");
 
 class CompraController {
-  constructor(compraService) {
+  constructor(compraService, tarjetaService) {
     this.compraService = compraService;
+    this.tarjetaService = tarjetaService;
 
     this.obtenerTodos = this.obtenerTodos.bind(this);
     this.obtenerPorId = this.obtenerPorId.bind(this);
@@ -72,7 +73,9 @@ class CompraController {
 
   pagar(req, res) {
     this.exigirDuenio(req);
-    res.json(this.compraService.pagarCompra(req.params.id));
+    // Para pagar hay que elegir una de las tarjetas guardadas del comprador.
+    const tarjeta = this.tarjetaService.obtenerDelUsuario(req.usuario, req.body.tarjetaId);
+    res.json(this.compraService.pagarCompra(req.params.id, tarjeta));
   }
 
   obtenerMensajes(req, res) {

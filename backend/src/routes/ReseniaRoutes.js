@@ -6,12 +6,14 @@ const {
   reseniaRepository,
   compraRepository,
   organizadorRepository,
+  notificacionService,
 } = require("../container");
 
 const reseniaService = new ReseniaService(
   reseniaRepository,
   compraRepository,
-  organizadorRepository
+  organizadorRepository,
+  notificacionService
 );
 const controllers = new ReseniaController(reseniaService);
 
