@@ -9,6 +9,11 @@ const { usuarioRepository, eventoRepository, organizadorRepository, compraReposi
 const ReseniaService = require("./services/ReseniaService");
 const { hashPassword } = require("./utils/password");
 
+// Fecha de mañana en formato AAAA-MM-DD (para probar el recordatorio "tu evento es mañana").
+const manana = new Date();
+manana.setDate(manana.getDate() + 1);
+const fechaManana = `${manana.getFullYear()}-${String(manana.getMonth() + 1).padStart(2, "0")}-${String(manana.getDate()).padStart(2, "0")}`;
+
 function cargarDatos() {
   // Todas las cuentas de prueba (compradores y organizadores) tienen la contraseña "123456".
   const crearUsuario = (nombre, apellido, email) =>
@@ -36,6 +41,8 @@ function cargarDatos() {
       entradas: [["General", 20000, "Campo", 150]] },
     { nombre: "Cosquin Rock 2025", fecha: "2027-02-15", descripcion: "Festival ya realizado", categoria: festival, organizador: liveNation,
       entradas: [["General", 50000, "Campo", 300]] },
+    { nombre: "Stand-Up Comedy", fecha: fechaManana, descripcion: "Una noche de humor con los mejores comediantes", categoria: teatro, organizador: teatroBA,
+      entradas: [["General", 12000, "Platea", 80], ["VIP", 25000, "Primera fila", 20]] },
   ];
 
   const eventos = eventosIniciales.map((datos) => {
@@ -50,7 +57,7 @@ function cargarDatos() {
     datos.organizador.eventos.push(evento);
     return evento;
   });
-  const [coldplay, jazz, hamlet, lolla, nocheRock, cosquin ] = eventos;
+  const [coldplay, jazz, hamlet, lolla, nocheRock, cosquin, standUp] = eventos;
 
   // Favoritos de ejemplo para Ana.
   ana.favoritos.push(coldplay.id, jazz.id, lolla.id);
@@ -86,6 +93,7 @@ function cargarDatos() {
   comprar(mer, hamlet, 1, 2, EstadoCompra.CONFIRMADA);
   comprar(tomas, nocheRock, 1, 2, EstadoCompra.UTILIZADA);
   comprar(mer, nocheRock, 1, 1, EstadoCompra.CONFIRMADA);
+  comprar(ana, standUp, 1, 2, EstadoCompra.CONFIRMADA);
 
   nocheRock.fecha = "2025-06-01";
   cosquin.fecha = "2025-02-15";

@@ -6,6 +6,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PagoModal from "../componentes/PagoModal";
 import SelectorTarjeta from "../componentes/SelectorTarjeta";
+import { get } from "../api";
+import { descargarComprobante } from "../comprobante";
 import { pagarCompras } from "../pago";
 import { colores, radios } from "../tema";
 import { formatearPrecio } from "../formato";
@@ -63,6 +65,7 @@ export default function PagarScreen({ route, navigation }) {
         monto={formatearPrecio(total)}
         mensaje={mensaje}
         textoContinuar="Ver mis entradas"
+        onComprobante={async () => descargarComprobante([await get(`/compras/${compraId}`)])}
         onContinuar={() => {
           setEstado(null);
           navigation.navigate("Inicio", { screen: "Mis compras" });

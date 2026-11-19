@@ -13,6 +13,8 @@ class NotificacionController {
   }
 
   obtener(req, res) {
+    if (req.rol === "COMPRADOR") this.notificacionService.generarRecordatorios(req.usuario);
+
     res.json(this.notificacionService.obtener(req.rol, this.destinatario(req)));
   }
 

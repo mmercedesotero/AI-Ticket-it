@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { enviar, get } from "../api";
 import { useEventos } from "../eventos";
+import { descargarComprobante } from "../comprobante";
 import { pagarCompras } from "../pago";
 import PagoModal from "../componentes/PagoModal";
 import SelectorTarjeta from "../componentes/SelectorTarjeta";
@@ -203,6 +204,10 @@ export default function SeleccionarEntradasScreen({ route, navigation }) {
         monto={formatearPrecio(total)}
         mensaje={mensajePago}
         textoContinuar="Ver mis entradas"
+        onComprobante={async () => {
+          const compras = await Promise.all([...creadas.current.values()].map((idCompra) => get(`/compras/${idCompra}`)));
+          descargarComprobante(compras);
+        }}
         onContinuar={() => {
           setEstadoPago(null);
           navigation.navigate("Inicio", { screen: "Mis compras" });

@@ -16,6 +16,7 @@ const TIPOS = {
   REEMBOLSO: { icono: "cash-outline", color: "#7C3AED", fondo: "#EDE9FE" },
   EVENTO_AGOTADO: { icono: "flame", color: colores.acento, fondo: colores.acentoSuave },
   EVENTO_PUBLICADO: { icono: "megaphone-outline", color: "#2563EB", fondo: "#DBEAFE" },
+  RECORDATORIO: { icono: "alarm-outline", color: "#2563EB", fondo: "#DBEAFE" },
   RESENIA: { icono: "star", color: "#D97706", fondo: "#FEF3C7" },
 };
 

@@ -8,6 +8,7 @@ import { SesionContext, useSesion } from "./src/sesion";
 import { EventosProvider } from "./src/eventos";
 import { NotificacionesProvider, useNotificaciones } from "./src/notificaciones";
 import NotificacionesScreen from "./src/screens/NotificacionesScreen";
+import CalendarioScreen from "./src/screens/CalendarioScreen";
 import DialogoRaiz from "./src/componentes/DialogoRaiz";
 import { colores } from "./src/tema";
 import LoginScreen from "./src/screens/LoginScreen";
@@ -36,7 +37,8 @@ const Tab = createBottomTabNavigator();
 const ICONOS_TAB = {
   Eventos: ["compass", "compass-outline"],
   "Mis compras": ["ticket", "ticket-outline"],
-  "Mis eventos": ["calendar", "calendar-outline"],
+  "Mis eventos": ["albums", "albums-outline"],
+  Calendario: ["calendar-number", "calendar-number-outline"],
   Notificaciones: ["notifications", "notifications-outline"],
   Perfil: ["person", "person-outline"],
 };
@@ -55,7 +57,7 @@ function Inicio() {
   const { sesion } = useSesion();
   const { noLeidas } = useNotificaciones();
 
-  // Un puntito coral en la campana avisa que hay notificaciones sin leer (sin mostrar la cantidad).
+  // Un puntito verde en la campana avisa que hay notificaciones sin leer (sin mostrar la cantidad).
   const opcionesNotificaciones = {
     tabBarBadge: noLeidas > 0 ? " " : undefined,
     tabBarBadgeStyle: { backgroundColor: colores.acento, minWidth: 10, maxHeight: 10, borderRadius: 5, top: 2 },
@@ -65,6 +67,7 @@ function Inicio() {
     return (
       <Tab.Navigator screenOptions={opcionesTab}>
         <Tab.Screen name="Mis eventos" component={OrganizadorScreen} />
+        <Tab.Screen name="Calendario" component={CalendarioScreen} />
         <Tab.Screen name="Notificaciones" component={NotificacionesScreen} options={opcionesNotificaciones} />
         <Tab.Screen name="Perfil" component={PerfilScreen} />
       </Tab.Navigator>
@@ -75,6 +78,7 @@ function Inicio() {
     <Tab.Navigator screenOptions={opcionesTab}>
       <Tab.Screen name="Eventos" component={EventosScreen} />
       <Tab.Screen name="Mis compras" component={MisComprasScreen} />
+      <Tab.Screen name="Calendario" component={CalendarioScreen} />
       <Tab.Screen name="Notificaciones" component={NotificacionesScreen} options={opcionesNotificaciones} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
     </Tab.Navigator>

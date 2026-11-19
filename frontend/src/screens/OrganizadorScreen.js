@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginBottom: 10, borderWidth: 1, borderColor: colores.borde,
   },
   tarjetaFila: { flexDirection: "row", gap: 12 },
-  miniatura: { width: 72, height: 72, borderRadius: 10, overflow: "hidden", backgroundColor: colores.indigo, alignItems: "center", justifyContent: "center" },
+  miniatura: { width: 96, height: 64, borderRadius: 10, overflow: "hidden", backgroundColor: colores.indigo, alignItems: "center", justifyContent: "center" },
   foto: { width: "100%", height: "100%" },
   tarjetaCuerpo: { flex: 1 },
   nombre: { fontSize: 16, fontWeight: "700", color: colores.indigo },

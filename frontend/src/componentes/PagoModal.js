@@ -7,7 +7,7 @@ const VERDE = "#12B76A";
 
 // Pantalla completa del pago: "procesando" -> "exito" (se expande un círculo verde con el tilde) o "error".
 // estado: null (oculto) | "procesando" | "exito" | "error"
-export default function PagoModal({ estado, monto, mensaje, onContinuar, textoContinuar, onReintentar, onCerrar }) {
+export default function PagoModal({ estado, monto, mensaje, onContinuar, textoContinuar, onComprobante, onReintentar, onCerrar }) {
   const { width, height } = useWindowDimensions();
   const circulo = useRef(new Animated.Value(0)).current;
   const tilde = useRef(new Animated.Value(0)).current;
@@ -64,6 +64,12 @@ export default function PagoModal({ estado, monto, mensaje, onContinuar, textoCo
                 <Pressable style={styles.botonBlanco} onPress={onContinuar}>
                   <Text style={styles.botonBlancoTexto}>{textoContinuar}</Text>
                 </Pressable>
+                {onComprobante && (
+                  <Pressable style={styles.botonContorno} onPress={onComprobante}>
+                    <Ionicons name="document-text-outline" size={18} color={colores.blanco} />
+                    <Text style={styles.botonContornoTexto}>Descargar comprobante</Text>
+                  </Pressable>
+                )}
               </Animated.View>
             </View>
           </>
@@ -108,6 +114,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32, paddingVertical: 14,
   },
   botonBlancoTexto: { color: VERDE, fontWeight: "800", fontSize: 16 },
+  botonContorno: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 12,
+    borderWidth: 1.5, borderColor: "rgba(255,255,255,0.9)", borderRadius: radios.boton,
+    paddingHorizontal: 24, paddingVertical: 12,
+  },
+  botonContornoTexto: { color: colores.blanco, fontWeight: "700", fontSize: 15 },
 
   botonCoral: { marginTop: 20, backgroundColor: colores.acento, borderRadius: radios.boton, paddingHorizontal: 36, paddingVertical: 14 },
   botonCoralTexto: { color: colores.blanco, fontWeight: "700", fontSize: 16 },

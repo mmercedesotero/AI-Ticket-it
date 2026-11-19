@@ -21,7 +21,7 @@ export function LogoIcono({ ancho = 40, color = colores.acento }) {
   );
 }
 
-// Logo completo: ícono + "Ticket It" (con "It" en coral).
+// Logo completo: ícono + "Ticket It" (con "It" en el color de acento).
 export default function Logo({ tamano = 22 }) {
   return (
     <View style={styles.fila}>

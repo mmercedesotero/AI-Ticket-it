@@ -14,7 +14,7 @@ const organizadorRepository = new OrganizadorRepository();
 
 const NotificacionRepository = require("./repositories/NotificacionRepository");
 const NotificacionService = require("./services/NotificacionService");
-const notificacionService = new NotificacionService(new NotificacionRepository());
+const notificacionService = new NotificacionService(new NotificacionRepository(), compraRepository);
 
 
 module.exports = { usuarioRepository, eventoRepository, compraRepository, organizadorRepository, categoriaRepository, reseniaRepository, notificacionService };

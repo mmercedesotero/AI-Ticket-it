@@ -5,6 +5,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useFocusEffect } from "@react-navigation/native";
 import { enviar, get } from "../api";
 import { alerta } from "../dialogo";
+import { descargarComprobante } from "../comprobante";
 import TicketCard from "../componentes/TicketCard";
 import { iconoDe } from "../componentes/TarjetaEvento";
 import { ESTADOS, codigoDe, esPasada, textoDias } from "../compras";
@@ -171,6 +172,13 @@ export default function EntradaScreen({ route, navigation }) {
           <Ionicons name="chatbubble-outline" size={18} color={colores.indigo} />
           <Text style={styles.botonBordeTexto}>Chatear con el organizador</Text>
         </Pressable>
+
+        {(compra.estado === "CONFIRMADA" || compra.estado === "UTILIZADA") && (
+          <Pressable style={styles.botonBorde} onPress={() => descargarComprobante([compra])}>
+            <Ionicons name="document-text-outline" size={18} color={colores.indigo} />
+            <Text style={styles.botonBordeTexto}>Descargar comprobante</Text>
+          </Pressable>
+        )}
 
         {!pasada && (
           <Pressable style={styles.cancelar} onPress={cancelar}>
