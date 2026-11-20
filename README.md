@@ -231,7 +231,6 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 | **Editar perfil** | Foto, nombre, teléfono, ciudad, contraseña, pago rápido y eliminar cuenta. |
 | **Favoritos** | Todos los eventos guardados. |
 | **Métodos de pago / Agregar tarjeta** | Administrar las tarjetas guardadas. |
-| **Términos y condiciones** | Reglas y permisos que debe respetar el usuario. |
 | **Ayuda y soporte** | Preguntas frecuentes con buscador y categorías. |
 
 ### Organizador (barra inferior: Mis eventos, Calendario, Notificaciones, Perfil)
