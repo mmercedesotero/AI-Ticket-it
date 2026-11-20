@@ -11,6 +11,7 @@ const ICONOS = {
   Teatro: "ribbon-outline",
   Festival: "sparkles",
   Humor: "happy-outline",
+  Deportes: "football-outline",
   Danza: "body-outline",
 };
 export const iconoDe = (evento) => ICONOS[evento.categoria?.nombre] ?? "calendar";

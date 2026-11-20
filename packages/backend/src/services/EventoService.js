@@ -72,10 +72,16 @@ class EventoService {
     let eventos = this.eventoRepository.findAll();
 
     if (texto) {
-      const buscado = normalizar(texto);
-      eventos = eventos.filter((evento) =>
-        normalizar(`${evento.nombre} ${evento.descripcion}`).includes(buscado)
-      );
+      // Cada palabra buscada tiene que ser el comienzo de alguna palabra del evento: "cena" encuentra
+      // "Cena Show de Tango" pero no "escenarios" (que la contiene en el medio).
+      const palabras = normalizar(texto).split(/\s+/).filter(Boolean);
+      const escapar = (palabra) => palabra.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const patrones = palabras.map((p) => new RegExp(`(^|[^a-z0-9])${escapar(p)}`));
+
+      eventos = eventos.filter((evento) => {
+        const contenido = normalizar(`${evento.nombre} ${evento.descripcion}`);
+        return patrones.every((patron) => patron.test(contenido));
+      });
     }
 
     if (categoriaId) {

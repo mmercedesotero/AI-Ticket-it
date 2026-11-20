@@ -29,6 +29,13 @@ const IMAGENES = {
   "Macbeth": require("../img/macbeth.jpeg"),
   "Gala de Ballet de Primavera": require("../img/ballet de primavera.jpeg"),
   "Especial Verano: Comedia en Vivo": require("../img/Especial Verano Comedia en Vivo.jpeg"),
+  "Superclásico Amateur": require("../img/Superclásico Amateur.jpeg"),
+  "Noche de Básquet: Liga Nacional": require("../img/Noche de Básquet Liga Nacional.jpeg"),
+  "Maratón de la Ciudad 21K": require("../img/Maratón de la Ciudad 21K.jpg"),
+  "Torneo Abierto de Tenis": require("../img/Torneo Abierto de Tenis.jpeg"),
+  "Noche de Boxeo: Pelea Estelar": require("../img/Noche de boxeo.jpeg"),
+  "Final de Rugby del Sur": require("../img/Final de Rugby del Sur.jpeg"),
+  "Copa de Fútbol 7 2026": require("../img/Copa de Fútbol 7 2026.jpeg"),
   "Festival Ruido Blanco 2026": require("../img/ruido blanco.jpeg"),
 };
 

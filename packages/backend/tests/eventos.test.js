@@ -38,6 +38,28 @@ describe("Eventos", () => {
       assert.ok(r.body.every((e) => `${e.nombre} ${e.descripcion}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes("monologos")));
     });
 
+    test("la palabra buscada tiene que empezar una palabra: 'cena' no trae eventos que dicen 'escenarios'", async () => {
+      const r = await api.llamar("GET", "/eventos?texto=cena");
+      const nombres = r.body.map((e) => e.nombre);
+      assert.ok(nombres.includes("Cena Show de Tango"));
+      assert.ok(!nombres.includes("Lollapalooza"), "su descripción dice 'escenarios'");
+      assert.ok(!nombres.includes("El Principito"), "su descripción dice 'escena'");
+    });
+
+    test("buscar el comienzo de una palabra sí funciona, y varias palabras tienen que estar todas", async () => {
+      assert.ok((await api.llamar("GET", "/eventos?texto=mono")).body.some((e) => e.nombre === "Noche de Monólogos"));
+      const juntas = (await api.llamar("GET", "/eventos?texto=cena tango")).body.map((e) => e.nombre);
+      assert.deepEqual(juntas, ["Cena Show de Tango"], "solo el que tiene las dos palabras");
+      assert.deepEqual((await api.llamar("GET", "/eventos?texto=cena futbol")).body, []);
+    });
+
+    test("los caracteres especiales de una búsqueda no rompen nada", async () => {
+      for (const texto of ["(", "[a-z", "a+b", "*", "\\", "?"]) {
+        const r = await api.llamar("GET", `/eventos?texto=${encodeURIComponent(texto)}`);
+        assert.equal(r.status, 200, `debería aceptar "${texto}"`);
+      }
+    });
+
     test("busca también dentro de la descripción", async () => {
       const r = await api.llamar("GET", "/eventos?texto=shakespeare");
       assert.ok(r.body.some((e) => e.nombre === "Hamlet"));

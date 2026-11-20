@@ -56,7 +56,7 @@ La aplicación se ejecuta de forma local: el **backend** corre en la computadora
 ### Organizador
 - Panel con entradas vendidas, ingresos, eventos activos y calificación promedio.
 - Filtros por estado (próximos, finalizados) y chips (hoy y mañana, esta semana, agotándose, sin ventas).
-- Crear eventos con portada, categoría y varios tipos de entrada.
+- Crear eventos con portada, categoría y varios tipos de entrada. Si el tipo de evento que necesita no existe (conferencias, gastronomía...), puede **agregar una categoría nueva** desde la misma pantalla. Hay categorías de recital, teatro, festival, humor, danza y deportes.
 - **Editar** un evento que todavía no se realizó (datos, portada, precios y cupos, y agregar tipos de entrada) y **eliminarlo**. Si cambia la fecha, se avisa a los compradores; si se elimina, se cancelan las compras activas y se reembolsan las pagadas.
 - Gestionar cada evento: ventas, cupo restante y listado de compradores con chat.
 - Notificaciones propias: mañana o hoy es tu evento, se está agotando, todavía no vendiste, nueva reseña y mensajes nuevos de los compradores.
@@ -179,12 +179,13 @@ cd packages/backend
 npm test
 ```
 
-Son más de 200 tests y tardan unos 20 segundos. Cubren:
+Son más de 200 tests (221) y tardan unos 20 segundos. Cubren:
 
 | Archivo | Qué prueba |
 |---------|-----------|
 | `auth.test.js` | Registro, login, sesión por token, editar perfil, cambiar y recuperar la contraseña, eliminar la cuenta y fotos de perfil. |
 | `eventos.test.js` | Búsqueda y filtros, crear, portada, editar y eliminar eventos, con los permisos de cada rol. |
+| `categorias.test.js` | Categorías de prueba (incluye Deportes) y cómo agregar una nueva: validaciones, nombres repetidos y permisos. |
 | `compras.test.js` | Comprar (cupos y validaciones), pagar (incluido el rechazo con `0000`), cancelar y reembolsar, y las reservas que vencen. |
 | `tarjetas-favoritos.test.js` | Validaciones de tarjetas, duplicadas y máximo de 5; favoritos. |
 | `resenias.test.js` | Quién puede puntuar, límites del puntaje y promedio del organizador. |
@@ -196,13 +197,13 @@ Para correr un solo archivo: `node --test tests/compras.test.js`.
 
 ### Probar la API con Postman
 
-En [`packages/backend/postman/`](packages/backend/postman) está la colección **AI-Ticket-It.postman_collection.json** (111 pedidos) y un entorno local, **AI-Ticket-It.postman_environment.json**.
+En [`packages/backend/postman/`](packages/backend/postman) está la colección **AI-Ticket-It.postman_collection.json** (114 pedidos) y un entorno local, **AI-Ticket-It.postman_environment.json**.
 
 1. Levantar el backend (`npm start` en `packages/backend`): queda en `http://localhost:3000`.
 2. En Postman: **Import** y elegir los dos archivos (el entorno es opcional: la colección ya trae `baseUrl`).
 3. Para correr todo de una vez: clic derecho en la colección → **Run collection**. Los pedidos están en orden y cada uno guarda lo que necesita el siguiente (tokens, ids) en variables, así que no hay que copiar nada a mano.
 
-Cada pedido tiene tests de Postman (estado de la respuesta, forma de los datos y mensajes de error): en la ejecución completa hay unas 170 verificaciones. También se puede correr desde la terminal con [Newman](https://www.npmjs.com/package/newman):
+Cada pedido tiene tests de Postman (estado de la respuesta, forma de los datos y mensajes de error): en la ejecución completa hay unas 180 verificaciones. También se puede correr desde la terminal con [Newman](https://www.npmjs.com/package/newman):
 
 ```bash
 npx newman run packages/backend/postman/AI-Ticket-It.postman_collection.json
@@ -211,7 +212,7 @@ npx newman run packages/backend/postman/AI-Ticket-It.postman_collection.json
 | Carpeta | Qué recorre |
 |---------|-------------|
 | 1. Autenticación y perfil | Registro, login, token, editar perfil con foto, cambiar y recuperar la contraseña. |
-| 2. Categorías y eventos | Listar, buscar, filtrar, ordenar, crear (con y sin portada), editar. |
+| 2. Categorías y eventos | Listar y agregar categorías, buscar, filtrar, ordenar, crear (con y sin portada) y editar eventos. |
 | 3. Favoritos | Agregar, listar y quitar. |
 | 4. Tarjetas | Guardar (incluida la que se rechaza, terminada en `0000`), validaciones y listar. |
 | 5. Compras y pagos | Comprar, reservar, pagar, pago rechazado, ventas del organizador y cancelaciones. |
@@ -294,7 +295,7 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 | Pantalla | Qué hace |
 |----------|----------|
 | **Panel organizador** | Resumen de ventas, aviso de eventos de hoy o mañana, filtros, lista de eventos (con Editar y Gestionar) y acceso a Mensajes. |
-| **Crear / Editar evento** | Portada, nombre, fecha, descripción, categoría y tipos de entrada. Al editar un evento existente también permite eliminarlo. |
+| **Crear / Editar evento** | Portada, nombre, fecha, descripción, categoría (o una nueva con "Otra categoría") y tipos de entrada. Al editar un evento existente también permite eliminarlo. |
 | **Gestionar evento** | Entradas vendidas, ingresos, cupo restante y compradores con acceso al chat. |
 | **Calendario, Notificaciones, Perfil** | Las mismas pantallas, adaptadas a los eventos del organizador. |
 
@@ -318,7 +319,7 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 | Eventos | `GET /eventos` | Listar con filtros: `texto`, `categoriaId`, `orden` (fecha, precio, puntaje) y `direccion` |
 | | `GET /eventos/:id` · `GET /eventos/:id/portada` | Detalle y portada del evento |
 | | `POST /eventos` · `PUT /eventos/:id` · `DELETE /eventos/:id` | Solo organizadores, y solo sobre sus propios eventos |
-| Categorías | `GET /categorias` | Listar categorías |
+| Categorías | `GET /categorias` · `POST /categorias` | Listar y agregar un tipo de evento (solo organizadores; nombre de 2 a 30 caracteres, sin repetir) |
 | Compras | `GET /compras` | Las del comprador, o `?eventoId=` para el organizador dueño del evento |
 | | `POST /compras` | Comprar o reservar entradas (queda pendiente de pago) |
 | | `PUT /compras/:id/pagar` | Pagar con una tarjeta guardada |
@@ -352,6 +353,8 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 **Mensajes:** cada compra tiene su chat entre el comprador y el organizador del evento. Al escribir se le crea un aviso a la otra persona ("Nuevo mensaje de Ana en Coldplay"); si ya tenía uno sin leer de ese chat se actualiza en vez de crear otro. Al abrir el chat, sus mensajes y el aviso quedan leídos.
 
 **Reseñas:** solo se puede puntuar un evento con una entrada utilizada, una vez por evento, de 1 a 5.
+
+**Búsqueda de eventos:** busca en el nombre y la descripción, sin distinguir mayúsculas ni tildes. Cada palabra buscada tiene que ser el comienzo de una palabra del evento (así "cena" encuentra "Cena Show de Tango" pero no "escenarios"), y si se escriben varias, tienen que estar todas.
 
 **Editar y eliminar eventos:** solo el organizador dueño puede hacerlo y solo si el evento todavía no se realizó (los ya realizados quedan en el historial y en las reseñas). Al editar, los tipos de entrada existentes se modifican pero no se pueden quitar (podrían tener ventas) y se pueden agregar nuevos; si algo es inválido no se aplica ningún cambio. Si se cambia la fecha se avisa a quienes tienen entradas. Al eliminar, las compras pendientes se cancelan, las pagadas se reembolsan, se avisa a los compradores y el evento sale de los favoritos.
 
