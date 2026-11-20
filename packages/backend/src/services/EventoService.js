@@ -19,6 +19,35 @@ const fechaValida = (fecha) => {
   );
 };
 
+// Normaliza y valida el lugar del evento. Con "base" se completan los datos que no vengan (para editar de a partes).
+// Nombre del lugar, ciudad y país son obligatorios; la dirección es opcional.
+const validarLugar = (lugar, base = {}) => {
+  if (lugar === null || typeof lugar !== "object" || Array.isArray(lugar))
+    throw new ValidationError("El lugar del evento es obligatorio (nombre, ciudad y país)");
+
+  const campo = (clave, etiqueta, { obligatorio, minimo, maximo }) => {
+    const valor = lugar[clave] !== undefined ? lugar[clave] : base[clave];
+    if (valor === undefined || valor === null || valor === "") {
+      if (obligatorio) throw new ValidationError(`${etiqueta} es obligatorio`);
+      return "";
+    }
+    if (typeof valor !== "string") throw new ValidationError(`${etiqueta} debe ser un texto`);
+
+    const limpio = valor.trim().replace(/\s+/g, " ");
+    if (limpio === "" && obligatorio) throw new ValidationError(`${etiqueta} es obligatorio`);
+    if (limpio !== "" && (limpio.length < minimo || limpio.length > maximo))
+      throw new ValidationError(`${etiqueta} debe tener entre ${minimo} y ${maximo} caracteres`);
+    return limpio;
+  };
+
+  return {
+    nombre: campo("nombre", "El nombre del lugar", { obligatorio: true, minimo: 2, maximo: 80 }),
+    direccion: campo("direccion", "La dirección", { obligatorio: false, minimo: 3, maximo: 120 }),
+    ciudad: campo("ciudad", "La ciudad", { obligatorio: true, minimo: 2, maximo: 60 }),
+    pais: campo("pais", "El país", { obligatorio: true, minimo: 2, maximo: 60 }),
+  };
+};
+
 const normalizar = (texto) =>
   String(texto)
     .toLowerCase()
@@ -68,7 +97,7 @@ class EventoService {
     return suma / resenias.length;
   }
 
-  buscar({ texto, categoriaId, precioMin, precioMax, orden, direccion } = {}) {
+  buscar({ texto, categoriaId, ciudad, pais, precioMin, precioMax, orden, direccion } = {}) {
     let eventos = this.eventoRepository.findAll();
 
     if (texto) {
@@ -79,7 +108,8 @@ class EventoService {
       const patrones = palabras.map((p) => new RegExp(`(^|[^a-z0-9])${escapar(p)}`));
 
       eventos = eventos.filter((evento) => {
-        const contenido = normalizar(`${evento.nombre} ${evento.descripcion}`);
+        const lugar = evento.lugar ? `${evento.lugar.nombre} ${evento.lugar.direccion} ${evento.lugar.ciudad} ${evento.lugar.pais}` : "";
+        const contenido = normalizar(`${evento.nombre} ${evento.descripcion} ${lugar}`);
         return patrones.every((patron) => patron.test(contenido));
       });
     }
@@ -90,6 +120,10 @@ class EventoService {
           evento.categoria && String(evento.categoria.id) === String(categoriaId)
       );
     }
+
+    // Ciudad y país: se comparan completos, sin importar mayúsculas ni tildes.
+    if (ciudad) eventos = eventos.filter((evento) => evento.lugar && normalizar(evento.lugar.ciudad) === normalizar(ciudad));
+    if (pais) eventos = eventos.filter((evento) => evento.lugar && normalizar(evento.lugar.pais) === normalizar(pais));
 
     if (precioMin !== undefined || precioMax !== undefined) {
       const min = Number(precioMin ?? 0);
@@ -121,7 +155,7 @@ class EventoService {
   }
 
   crear(datos = {}) {
-    const { nombre, fecha, descripcion, categoriaId, organizadorId, tiposEntrada } = datos;
+    const { nombre, fecha, descripcion, categoriaId, organizadorId, tiposEntrada, lugar } = datos;
 
     if (typeof nombre !== "string" || nombre.trim() === "")
       throw new ValidationError("El nombre es obligatorio");
@@ -149,6 +183,7 @@ class EventoService {
       return new Entrada(i + 1, nombre.trim(), precio, ubicacion, cupoDisponible);
     });
 
+    const lugarValido = validarLugar(lugar);
     const portada = validarImagen(datos.portada, "La portada");
 
     const categoria = this.categoriaRepository.findById(categoriaId);
@@ -168,6 +203,7 @@ class EventoService {
       organizador
     );
     evento.portada = portada;
+    evento.lugar = lugarValido;
     if (evento.yaSeRealizo())
       throw new ValidationError("La fecha del evento no puede ser pasada");
 
@@ -240,6 +276,8 @@ class EventoService {
       cambios.categoria = categoria;
     }
 
+    if (datos.lugar !== undefined) cambios.lugar = validarLugar(datos.lugar, evento.lugar ?? {});
+
     if ("portada" in datos) cambios.portada = validarImagen(datos.portada, "La portada");
 
     // Se valida todo antes de aplicar algo, para no dejar el evento a medias.
@@ -285,6 +323,7 @@ class EventoService {
     }
 
     const fechaAnterior = evento.fecha;
+    const lugarAnterior = evento.lugar;
     Object.assign(evento, cambios);
 
     cambiosEntradas.forEach(({ existente, ...campos }) => Object.assign(existente, campos));
@@ -303,6 +342,21 @@ class EventoService {
           tipo: "EVENTO_MODIFICADO",
           titulo: "Cambió la fecha de tu evento",
           mensaje: `${evento.nombre} ahora es el ${cambios.fecha.split("-").reverse().join("/")}. Tus entradas siguen siendo válidas.`,
+        });
+      });
+    }
+
+    // Si cambió el lugar, también se les avisa a quienes ya tienen entradas.
+    const cambioElLugar = cambios.lugar && lugarAnterior && JSON.stringify(cambios.lugar) !== JSON.stringify(lugarAnterior);
+    if (cambioElLugar && this.notificacionService) {
+      const avisados = new Set();
+      this.comprasActivas(evento).forEach((compra) => {
+        if (avisados.has(compra.comprador.id)) return;
+        avisados.add(compra.comprador.id);
+        this.notificacionService.crear("COMPRADOR", compra.comprador.id, {
+          tipo: "EVENTO_MODIFICADO",
+          titulo: "Cambió el lugar de tu evento",
+          mensaje: `${evento.nombre} ahora es en ${cambios.lugar.nombre}, ${cambios.lugar.ciudad}. Tus entradas siguen siendo válidas.`,
         });
       });
     }

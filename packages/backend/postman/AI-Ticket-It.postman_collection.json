@@ -1291,6 +1291,86 @@
           }
         },
         {
+          "name": "Filtrar por ciudad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Todos son de Córdoba\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(r).to.not.be.empty;",
+                  "  r.forEach((e) => pm.expect(e.lugar.ciudad).to.eql(\"Córdoba\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/eventos?ciudad=Córdoba",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos"
+              ],
+              "query": [
+                {
+                  "key": "ciudad",
+                  "value": "Córdoba"
+                }
+              ]
+            },
+            "description": "Compara la ciudad completa, sin distinguir mayúsculas ni tildes. También se puede filtrar por `pais`.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Buscar por el lugar del evento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Encuentra el evento del Estadio River Plate\", () => pm.expect(r.map((e) => e.nombre)).to.include(\"Coldplay\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/eventos?texto=river plate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos"
+              ],
+              "query": [
+                {
+                  "key": "texto",
+                  "value": "river plate"
+                }
+              ]
+            },
+            "description": "La búsqueda de texto también mira el nombre del lugar, la dirección, la ciudad y el país.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
           "name": "Ordenar por puntaje (mejores primero)",
           "event": [
             {
@@ -1500,7 +1580,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Concierto de Postman\",\n  \"fecha\": \"{{fechaEvento}}\",\n  \"descripcion\": \"Evento creado desde la colección de Postman.\",\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"tiposEntrada\": [\n    {\n      \"nombre\": \"General\",\n      \"precio\": 1500,\n      \"ubicacion\": \"Campo\",\n      \"cupoDisponible\": 50\n    },\n    {\n      \"nombre\": \"VIP\",\n      \"precio\": 6000,\n      \"ubicacion\": \"Palco\",\n      \"cupoDisponible\": 5\n    }\n  ]\n}",
+              "raw": "{\n  \"nombre\": \"Concierto de Postman\",\n  \"fecha\": \"{{fechaEvento}}\",\n  \"descripcion\": \"Evento creado desde la colección de Postman.\",\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"lugar\": {\n    \"nombre\": \"Teatro de Postman\",\n    \"direccion\": \"Av. Corrientes 1234\",\n    \"ciudad\": \"Buenos Aires\",\n    \"pais\": \"Argentina\"\n  },\n  \"tiposEntrada\": [\n    {\n      \"nombre\": \"General\",\n      \"precio\": 1500,\n      \"ubicacion\": \"Campo\",\n      \"cupoDisponible\": 50\n    },\n    {\n      \"nombre\": \"VIP\",\n      \"precio\": 6000,\n      \"ubicacion\": \"Palco\",\n      \"cupoDisponible\": 5\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1667,7 +1747,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Evento con portada\",\n  \"fecha\": \"{{fechaEvento}}\",\n  \"descripcion\": \"Con imagen\",\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"portada\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\",\n  \"tiposEntrada\": [\n    {\n      \"nombre\": \"Única\",\n      \"precio\": 1000,\n      \"ubicacion\": \"Sala\",\n      \"cupoDisponible\": 10\n    }\n  ]\n}",
+              "raw": "{\n  \"nombre\": \"Evento con portada\",\n  \"fecha\": \"{{fechaEvento}}\",\n  \"descripcion\": \"Con imagen\",\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"lugar\": {\n    \"nombre\": \"Teatro de Postman\",\n    \"direccion\": \"Av. Corrientes 1234\",\n    \"ciudad\": \"Buenos Aires\",\n    \"pais\": \"Argentina\"\n  },\n  \"portada\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\",\n  \"tiposEntrada\": [\n    {\n      \"nombre\": \"Única\",\n      \"precio\": 1000,\n      \"ubicacion\": \"Sala\",\n      \"cupoDisponible\": 10\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1708,6 +1788,121 @@
             },
             "auth": {
               "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Crear un evento sin lugar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Explica el error\", () => {",
+                  "  const error = pm.response.json().error;",
+                  "  pm.expect(error).to.be.a(\"string\");",
+                  "  pm.expect(error).to.match(/lugar/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos"
+              ]
+            },
+            "description": "El lugar (nombre, ciudad y país) es obligatorio; la dirección es opcional.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenOrganizador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sin lugar\",\n  \"fecha\": \"{{fechaEvento}}\",\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"tiposEntrada\": [\n    {\n      \"nombre\": \"G\",\n      \"precio\": 1,\n      \"ubicacion\": \"Sala\",\n      \"cupoDisponible\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Editar solo el lugar de un evento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test(\"Cambia la ciudad y conserva el resto\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(r.lugar.ciudad).to.eql(\"Rosario\");",
+                  "  pm.expect(r.lugar.nombre).to.eql(\"Teatro de Postman\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/eventos/{{eventoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos",
+                "{{eventoId}}"
+              ]
+            },
+            "description": "Se puede mandar solo una parte del lugar: lo demás se conserva. Si cambia, se avisa a quienes ya compraron.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenOrganizador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lugar\": {\n    \"ciudad\": \"Rosario\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           }
         },

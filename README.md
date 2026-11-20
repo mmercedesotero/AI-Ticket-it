@@ -42,7 +42,7 @@ La aplicación se ejecuta de forma local: el **backend** corre en la computadora
 - Preferencia de "pago rápido" y eliminación de la cuenta.
 
 ### Comprador
-- **Explorar:** buscador, categorías, ordenar por fecha, precio o puntaje, carrusel de favoritos y etiquetas "Agotándose" / "Agotado".
+- **Explorar:** buscador, categorías, **filtro por ciudad**, ordenar por fecha, precio o puntaje, carrusel de favoritos y etiquetas "Agotándose" / "Agotado". Cada evento muestra **dónde se hace** (lugar, dirección, ciudad y país) y un botón **"Cómo llegar"** que abre Google Maps (o Apple Maps en iPhone).
 - **Favoritos:** guardar y quitar eventos con el corazón.
 - **Comprar:** elegir varios tipos de entrada a la vez, pagar con una tarjeta guardada o **reservar sin pagar** (la reserva dura 24 horas).
 - **Mis compras:** pestañas Activas y Pasadas, entrada con código QR, seguimiento del estado, cancelación, comprobante en PDF y chat con el organizador.
@@ -56,7 +56,7 @@ La aplicación se ejecuta de forma local: el **backend** corre en la computadora
 ### Organizador
 - Panel con entradas vendidas, ingresos, eventos activos y calificación promedio.
 - Filtros por estado (próximos, finalizados) y chips (hoy y mañana, esta semana, agotándose, sin ventas).
-- Crear eventos con portada, categoría y varios tipos de entrada. Si el tipo de evento que necesita no existe (conferencias, gastronomía...), puede **agregar una categoría nueva** desde la misma pantalla. Hay categorías de recital, teatro, festival, humor, danza y deportes.
+- Crear eventos con portada, categoría, **lugar** (nombre, dirección opcional, ciudad y país) y varios tipos de entrada. Si el tipo de evento que necesita no existe (conferencias, gastronomía...), puede **agregar una categoría nueva** desde la misma pantalla. Hay categorías de recital, teatro, festival, humor, danza y deportes.
 - **Editar** un evento que todavía no se realizó (datos, portada, precios y cupos, y agregar tipos de entrada) y **eliminarlo**. Si cambia la fecha, se avisa a los compradores; si se elimina, se cancelan las compras activas y se reembolsan las pagadas.
 - Gestionar cada evento: ventas, cupo restante y listado de compradores con chat.
 - Notificaciones propias: mañana o hoy es tu evento, se está agotando, todavía no vendiste, nueva reseña y mensajes nuevos de los compradores.
@@ -190,12 +190,13 @@ cd packages/backend
 npm test
 ```
 
-Son más de 200 tests (224) y tardan unos 20 segundos. Cubren:
+Son más de 200 tests (246) y tardan unos 20 segundos. Cubren:
 
 | Archivo | Qué prueba |
 |---------|-----------|
 | `auth.test.js` | Registro, login, sesión por token, editar perfil, cambiar y recuperar la contraseña, eliminar la cuenta y fotos de perfil. |
 | `eventos.test.js` | Búsqueda y filtros, crear, portada, editar y eliminar eventos, con los permisos de cada rol. |
+| `lugar.test.js` | Lugar del evento: obligatorio al crear, validaciones, edición por partes, aviso a los compradores al cambiarlo y búsqueda y filtros por ciudad y país. |
 | `categorias.test.js` | Categorías de prueba (incluye Deportes) y cómo agregar una nueva: validaciones, nombres repetidos y permisos. |
 | `compras.test.js` | Comprar (cupos y validaciones), pagar (incluido el rechazo con `0000`), cancelar y reembolsar, y las reservas que vencen. |
 | `tarjetas-favoritos.test.js` | Validaciones de tarjetas, duplicadas y máximo de 5; favoritos. |
@@ -208,13 +209,13 @@ Para correr un solo archivo: `node --test tests/compras.test.js`.
 
 ### Probar la API con Postman
 
-En [`packages/backend/postman/`](packages/backend/postman) está la colección **AI-Ticket-It.postman_collection.json** (114 pedidos) y un entorno local, **AI-Ticket-It.postman_environment.json**.
+En [`packages/backend/postman/`](packages/backend/postman) está la colección **AI-Ticket-It.postman_collection.json** (118 pedidos) y un entorno local, **AI-Ticket-It.postman_environment.json**.
 
 1. Levantar el backend (`npm start` en `packages/backend`): queda en `http://localhost:3000`.
 2. En Postman: **Import** y elegir los dos archivos (el entorno es opcional: la colección ya trae `baseUrl`).
 3. Para correr todo de una vez: clic derecho en la colección → **Run collection**. Los pedidos están en orden y cada uno guarda lo que necesita el siguiente (tokens, ids) en variables, así que no hay que copiar nada a mano.
 
-Cada pedido tiene tests de Postman (estado de la respuesta, forma de los datos y mensajes de error): en la ejecución completa hay unas 180 verificaciones. También se puede correr desde la terminal con [Newman](https://www.npmjs.com/package/newman):
+Cada pedido tiene tests de Postman (estado de la respuesta, forma de los datos y mensajes de error): en la ejecución completa hay unas 185 verificaciones. También se puede correr desde la terminal con [Newman](https://www.npmjs.com/package/newman):
 
 ```bash
 npx newman run packages/backend/postman/AI-Ticket-It.postman_collection.json
@@ -287,7 +288,7 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 | Pantalla | Qué hace |
 |----------|----------|
 | **Eventos** | Inicio: buscador, categorías, favoritos y próximos eventos con orden por fecha, precio o puntaje. Arriba a la derecha, el ícono de mensajes y la foto de perfil. |
-| **Detalle del evento** | Información, descripción, entradas disponibles, reseñas y botón de favorito. |
+| **Detalle del evento** | Información, lugar con dirección y botón "Cómo llegar" (abre el mapa), descripción, entradas disponibles, reseñas y botón de favorito. |
 | **Seleccionar entradas** | Cantidad por tipo de entrada, tarjeta, resumen, y los botones "Pagar" o "Reservar sin pagar". |
 | **Confirmar compra / Pago** | Hoja de confirmación y animación de pago aprobado o rechazado. |
 | **Mis compras** | Activas y Pasadas, con el estado de cada compra y cuánto falta para el evento o para que venza la reserva. |
@@ -328,7 +329,7 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 | | `POST /auth/recuperar` · `POST /auth/restablecer` | Recuperar la contraseña con un código |
 | | `GET /auth/perfil` · `PUT /auth/perfil` | Ver y editar el perfil |
 | | `PUT /auth/password` · `DELETE /auth/cuenta` | Cambiar contraseña y eliminar la cuenta |
-| Eventos | `GET /eventos` | Listar con filtros: `texto`, `categoriaId`, `orden` (fecha, precio, puntaje) y `direccion` |
+| Eventos | `GET /eventos` | Listar con filtros: `texto`, `categoriaId`, `ciudad`, `pais`, `precioMin`, `precioMax`, `orden` (fecha, precio, puntaje) y `direccion` (asc o desc) |
 | | `GET /eventos/:id` · `GET /eventos/:id/portada` | Detalle y portada del evento |
 | | `POST /eventos` · `PUT /eventos/:id` · `DELETE /eventos/:id` | Solo organizadores, y solo sobre sus propios eventos |
 | Categorías | `GET /categorias` · `POST /categorias` | Listar y agregar un tipo de evento (solo organizadores; nombre de 2 a 30 caracteres, sin repetir) |
@@ -366,7 +367,9 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 
 **Reseñas:** solo se puede puntuar un evento con una entrada utilizada, una vez por evento, de 1 a 5.
 
-**Búsqueda de eventos:** busca en el nombre y la descripción, sin distinguir mayúsculas ni tildes. Cada palabra buscada tiene que ser el comienzo de una palabra del evento (así "cena" encuentra "Cena Show de Tango" pero no "escenarios"), y si se escriben varias, tienen que estar todas.
+**Lugar del evento:** todo evento tiene un `lugar` con `nombre` del lugar, `ciudad` y `pais` (obligatorios) y `direccion` (opcional). Se puede editar por partes (por ejemplo, solo la ciudad) y, si cambia, se avisa a quienes ya compraron. Se puede filtrar por `ciudad` y `pais` (comparación completa, sin mayúsculas ni tildes).
+
+**Búsqueda de eventos:** busca en el nombre, la descripción y el lugar (nombre, dirección, ciudad y país), sin distinguir mayúsculas ni tildes. Cada palabra buscada tiene que ser el comienzo de una palabra del evento (así "cena" encuentra "Cena Show de Tango" pero no "escenarios"), y si se escriben varias, tienen que estar todas.
 
 **Editar y eliminar eventos:** solo el organizador dueño puede hacerlo y solo si el evento todavía no se realizó (los ya realizados quedan en el historial y en las reseñas). Al editar, los tipos de entrada existentes se modifican pero no se pueden quitar (podrían tener ventas) y se pueden agregar nuevos; si algo es inválido no se aplica ningún cambio. Si se cambia la fecha se avisa a quienes tienen entradas. Al eliminar, las compras pendientes se cancelan, las pagadas se reembolsan, se avisa a los compradores y el evento sale de los favoritos.
 
@@ -442,6 +445,7 @@ Evento
 - tiposEntrada: Entrada[]
 - multimedia: Multimedia[]
 - organizador: Organizador
+- lugar: { nombre, direccion, ciudad, pais }   (agregado en la implementación)
 - tuPrecioEstaEntre(min, max): Boolean
 
 Entrada

@@ -4,6 +4,7 @@ import BotonFavorito from "./BotonFavorito";
 import { colores, radios } from "../tema";
 import { formatearFechaLarga, formatearPrecio, yaSeRealizo } from "../formato";
 import { imagenDe } from "../imagenes";
+import { textoLugar } from "../lugar";
 
 // Si el evento no tiene foto, se muestra un ícono según su categoría.
 const ICONOS = {
@@ -71,6 +72,12 @@ export default function TarjetaEvento({ evento, favorito, onPress, onFavorito })
           <Ionicons name="calendar-outline" size={16} color={colores.textoSuave} />
           <Text style={styles.lineaTexto}>{formatearFechaLarga(evento.fecha)}</Text>
         </View>
+        {evento.lugar && (
+          <View style={styles.linea}>
+            <Ionicons name="location-outline" size={16} color={colores.textoSuave} />
+            <Text style={styles.lineaTexto} numberOfLines={1}>{textoLugar(evento.lugar)}</Text>
+          </View>
+        )}
         <View style={styles.linea}>
           <Ionicons name="business-outline" size={16} color={colores.textoSuave} />
           <Text style={styles.lineaTexto} numberOfLines={1}>{evento.organizador?.nombre}</Text>

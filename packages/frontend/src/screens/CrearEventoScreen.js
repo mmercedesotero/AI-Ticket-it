@@ -23,6 +23,11 @@ export default function CrearEventoScreen({ route, navigation }) {
   const [fecha, setFecha] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [categoriaId, setCategoriaId] = useState(null);
+  // Dónde se hace el evento. El país arranca en Argentina para ahorrar un paso.
+  const [lugarNombre, setLugarNombre] = useState("");
+  const [lugarDireccion, setLugarDireccion] = useState("");
+  const [lugarCiudad, setLugarCiudad] = useState("");
+  const [lugarPais, setLugarPais] = useState("Argentina");
   const [entradas, setEntradas] = useState([entradaVacia()]);
   const [portada, setPortada] = useState(null);
   const [portadaOriginal, setPortadaOriginal] = useState(null);
@@ -47,6 +52,10 @@ export default function CrearEventoScreen({ route, navigation }) {
         setFecha(evento.fecha);
         setDescripcion(evento.descripcion ?? "");
         setCategoriaId(evento.categoria?.id ?? null);
+        setLugarNombre(evento.lugar?.nombre ?? "");
+        setLugarDireccion(evento.lugar?.direccion ?? "");
+        setLugarCiudad(evento.lugar?.ciudad ?? "");
+        setLugarPais(evento.lugar?.pais ?? "Argentina");
         setEntradas(
           evento.tiposEntrada.map((t) => ({
             id: t.id,
@@ -103,6 +112,8 @@ export default function CrearEventoScreen({ route, navigation }) {
       cupoDisponible: e.cupo.trim() === "" ? undefined : Number(e.cupo),
     }));
 
+  const lugar = () => ({ nombre: lugarNombre, direccion: lugarDireccion, ciudad: lugarCiudad, pais: lugarPais });
+
   const guardar = async () => {
     if (guardando) return;
     setGuardando(true);
@@ -114,13 +125,13 @@ export default function CrearEventoScreen({ route, navigation }) {
           portada && portada.startsWith("data:") ? { portada } : portada === null && portadaOriginal ? { portada: null } : {};
 
         const evento = await enviar("PUT", `/eventos/${eventoId}`, {
-          nombre, fecha, descripcion, categoriaId, ...cambioPortada, tiposEntrada: tiposEntrada(),
+          nombre, fecha, descripcion, categoriaId, lugar: lugar(), ...cambioPortada, tiposEntrada: tiposEntrada(),
         });
         recargar();
         alerta("¡Cambios guardados!", evento.nombre, [{ text: "Perfecto", onPress: () => navigation.goBack() }]);
       } else {
         const evento = await enviar("POST", "/eventos", {
-          nombre, fecha, descripcion, categoriaId, portada, tiposEntrada: tiposEntrada(),
+          nombre, fecha, descripcion, categoriaId, lugar: lugar(), portada, tiposEntrada: tiposEntrada(),
         });
         recargar(); // para que el evento nuevo aparezca en la lista global
         alerta("¡Evento publicado!", evento.nombre, [{ text: "OK", onPress: () => navigation.goBack() }]);
@@ -256,6 +267,59 @@ export default function CrearEventoScreen({ route, navigation }) {
           </Pressable>
         </View>
       )}
+
+      <Text style={styles.seccion}>Lugar del evento</Text>
+      <Text style={styles.label}>Nombre del lugar</Text>
+      <View style={styles.campoConIcono}>
+        <Ionicons name="business-outline" size={18} color={colores.textoSuave} />
+        <TextInput
+          style={styles.inputIcono}
+          placeholder="Ej. Teatro Colón, Estadio Luna Park"
+          placeholderTextColor={colores.textoPlaceholder}
+          value={lugarNombre}
+          onChangeText={setLugarNombre}
+          maxLength={80}
+        />
+      </View>
+
+      <Text style={styles.label}>Dirección (opcional)</Text>
+      <View style={styles.campoConIcono}>
+        <Ionicons name="location-outline" size={18} color={colores.textoSuave} />
+        <TextInput
+          style={styles.inputIcono}
+          placeholder="Ej. Cerrito 628"
+          placeholderTextColor={colores.textoPlaceholder}
+          value={lugarDireccion}
+          onChangeText={setLugarDireccion}
+          maxLength={120}
+        />
+      </View>
+
+      <View style={styles.dosColumnas}>
+        <View style={styles.columna}>
+          <Text style={styles.label}>Ciudad</Text>
+          <TextInput
+            style={styles.campo}
+            placeholder="Ej. Rosario"
+            placeholderTextColor={colores.textoPlaceholder}
+            value={lugarCiudad}
+            onChangeText={setLugarCiudad}
+            maxLength={60}
+          />
+        </View>
+        <View style={styles.columna}>
+          <Text style={styles.label}>País</Text>
+          <TextInput
+            style={styles.campo}
+            placeholder="Ej. Argentina"
+            placeholderTextColor={colores.textoPlaceholder}
+            value={lugarPais}
+            onChangeText={setLugarPais}
+            maxLength={60}
+          />
+        </View>
+      </View>
+      {editando && <Text style={styles.ayuda}>Si cambiás el lugar, les avisamos a quienes ya compraron.</Text>}
 
       <Text style={styles.seccion}>Tipos de entrada</Text>
       {entradas.map((e, i) => (

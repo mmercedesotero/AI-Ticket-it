@@ -142,7 +142,7 @@ describe("Eventos", () => {
 
     test("un comprador no puede crear eventos (403) y sin sesión da 401", async () => {
       const comprador = await api.registrar();
-      const cuerpo = { nombre: "X", fecha: api.fechaEn(10), categoriaId: 1, tiposEntrada: [{ nombre: "G", precio: 1, cupoDisponible: 1 }] };
+      const cuerpo = { nombre: "X", fecha: api.fechaEn(10), categoriaId: 1, lugar: api.LUGAR, tiposEntrada: [{ nombre: "G", precio: 1, cupoDisponible: 1 }] };
       assert.equal((await api.llamar("POST", "/eventos", cuerpo, comprador.token)).status, 403);
       assert.equal((await api.llamar("POST", "/eventos", cuerpo)).status, 401);
     });
@@ -150,7 +150,7 @@ describe("Eventos", () => {
     test("valida los datos del evento", async () => {
       const org = await api.registrar("ORGANIZADOR");
       const entrada = { nombre: "G", precio: 100, ubicacion: "Campo", cupoDisponible: 10 };
-      const valido = { nombre: "Ok", fecha: api.fechaEn(10), categoriaId: 1, tiposEntrada: [entrada] };
+      const valido = { nombre: "Ok", fecha: api.fechaEn(10), categoriaId: 1, lugar: api.LUGAR, tiposEntrada: [entrada] };
 
       const casos = [
         [{ ...valido, nombre: "  " }, 400, "nombre vacío"],
@@ -177,7 +177,7 @@ describe("Eventos", () => {
 
     test("un precio de 0 es válido (evento gratuito)", async () => {
       const org = await api.registrar("ORGANIZADOR");
-      const r = await api.llamar("POST", "/eventos", { nombre: "Gratis", fecha: api.fechaEn(10), categoriaId: 1, tiposEntrada: [{ nombre: "Libre", precio: 0, ubicacion: "Plaza", cupoDisponible: 100 }] }, org.token);
+      const r = await api.llamar("POST", "/eventos", { nombre: "Gratis", fecha: api.fechaEn(10), categoriaId: 1, lugar: api.LUGAR, tiposEntrada: [{ nombre: "Libre", precio: 0, ubicacion: "Plaza", cupoDisponible: 100 }] }, org.token);
       assert.equal(r.status, 201);
     });
   });

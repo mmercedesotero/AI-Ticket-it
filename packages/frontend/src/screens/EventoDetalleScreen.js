@@ -13,6 +13,8 @@ import { iconoDe, textoPrecio } from "../componentes/TarjetaEvento";
 import { colores, radios } from "../tema";
 import { formatearFechaLarga, formatearPrecio, yaSeRealizo } from "../formato";
 import { imagenDe } from "../imagenes";
+import Chip from "../componentes/Chip";
+import { abrirEnMapas, ciudadYPais } from "../lugar";
 
 export default function EventoDetalleScreen({ route, navigation }) {
   const { id } = route.params;
@@ -121,8 +123,16 @@ export default function EventoDetalleScreen({ route, navigation }) {
 
           <View style={styles.info}>
             <FilaInfo icono="calendar-outline" titulo={formatearFechaLarga(evento.fecha)} />
+            {evento.lugar && (
+              <FilaInfo
+                icono="location-outline"
+                titulo={evento.lugar.nombre}
+                detalle={[evento.lugar.direccion, ciudadYPais(evento.lugar)].filter(Boolean).join("\n")}
+                accion={<Chip etiqueta="Cómo llegar" icono="navigate-outline" onPress={() => abrirEnMapas(evento.lugar)} />}
+              />
+            )}
             {sectores.length > 0 && (
-              <FilaInfo icono="location-outline" titulo="Sectores" detalle={sectores.join(" · ")} />
+              <FilaInfo icono="grid-outline" titulo="Sectores" detalle={sectores.join(" · ")} />
             )}
             <FilaInfo icono="ticket-outline" titulo="Entradas digitales" detalle="Código QR en la app" />
           </View>
@@ -165,7 +175,7 @@ export default function EventoDetalleScreen({ route, navigation }) {
   );
 }
 
-function FilaInfo({ icono, titulo, detalle }) {
+function FilaInfo({ icono, titulo, detalle, accion }) {
   return (
     <View style={styles.filaInfo}>
       <Ionicons name={icono} size={22} color={colores.indigo} />
@@ -173,6 +183,7 @@ function FilaInfo({ icono, titulo, detalle }) {
         <Text style={styles.filaInfoTitulo}>{titulo}</Text>
         {detalle && <Text style={styles.filaInfoDetalle}>{detalle}</Text>}
       </View>
+      {accion}
     </View>
   );
 }

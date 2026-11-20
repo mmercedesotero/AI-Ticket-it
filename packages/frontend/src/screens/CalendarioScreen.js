@@ -14,6 +14,7 @@ import { iconoDe } from "../componentes/TarjetaEvento";
 import { colores, radios } from "../tema";
 import { formatearFechaLarga } from "../formato";
 import { imagenDe } from "../imagenes";
+import { textoLugar } from "../lugar";
 
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -254,7 +255,7 @@ function Fila({ item, onPress }) {
       <View style={styles.filaTextos}>
         <Text style={styles.filaNombre} numberOfLines={1}>{item.evento.nombre}</Text>
         <Text style={styles.filaFecha}>{formatearFechaLarga(item.evento.fecha)}</Text>
-        <Text style={styles.filaLugar} numberOfLines={1}>{item.evento.organizador?.nombre}</Text>
+        <Text style={styles.filaLugar} numberOfLines={1}>{item.evento.lugar ? textoLugar(item.evento.lugar) : item.evento.organizador?.nombre}</Text>
       </View>
       <View style={[styles.etiqueta, entrada ? styles.etiquetaEntrada : styles.etiquetaFavorito]}>
         <Ionicons name={entrada ? "ticket-outline" : "heart"} size={11} color={entrada ? CORAL_OSCURO : AZUL} />

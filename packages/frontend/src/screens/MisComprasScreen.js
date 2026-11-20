@@ -9,6 +9,7 @@ import CabeceraPantalla from "../componentes/CabeceraPantalla";
 import TicketCard from "../componentes/TicketCard";
 import { iconoDe } from "../componentes/TarjetaEvento";
 import { imagenDe } from "../imagenes";
+import { textoLugar } from "../lugar";
 import { ESTADOS, esPasada, estiloEstado, textoDias, textoReserva } from "../compras";
 import { colores } from "../tema";
 import { formatearFechaLarga, formatearPrecio } from "../formato";
@@ -90,6 +91,7 @@ function Entrada({ compra, navigation }) {
             </View>
             <Text style={styles.nombre} numberOfLines={2}>{compra.evento.nombre}</Text>
             <Linea icono="calendar-outline" texto={formatearFechaLarga(compra.evento.fecha)} />
+            {compra.evento.lugar && <Linea icono="location-outline" texto={textoLugar(compra.evento.lugar)} />}
             <Linea icono="business-outline" texto={compra.evento.organizador?.nombre ?? "Sin organizador"} />
             {pendiente && <Text style={styles.dias}>{textoReserva(compra)}</Text>}
             {compra.diasParaEvento !== null && compra.diasParaEvento !== undefined && (

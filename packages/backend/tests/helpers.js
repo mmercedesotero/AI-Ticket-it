@@ -18,6 +18,9 @@ const fechaEn = (dias) => {
 // PNG de 1x1 píxel, para probar imágenes.
 const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
+// Un lugar válido para los eventos de prueba.
+const LUGAR = { nombre: "Teatro de Prueba", direccion: "Calle Falsa 123", ciudad: "Buenos Aires", pais: "Argentina" };
+
 let contador = 0;
 const tarjetas = new Map(); // token -> id de su tarjeta
 const unico = () => `${Date.now().toString(36)}${(contador += 1)}`;
@@ -41,7 +44,7 @@ async function iniciar() {
     return { status: respuesta.status, body, headers: respuesta.headers };
   };
 
-  const cliente = { servidor, base, llamar, container, fechaEn, PNG, unico };
+  const cliente = { servidor, base, llamar, container, fechaEn, PNG, unico, LUGAR };
 
   // Entra con una cuenta existente y devuelve su token.
   cliente.login = async (email, password = "123456") => {
@@ -70,6 +73,7 @@ async function iniciar() {
         fecha: fechaEn(30),
         descripcion: "Evento de prueba",
         categoriaId: 1,
+        lugar: LUGAR,
         tiposEntrada: [
           { nombre: "General", precio: 1000, ubicacion: "Campo", cupoDisponible: 50 },
           { nombre: "VIP", precio: 5000, ubicacion: "Palco", cupoDisponible: 5 },

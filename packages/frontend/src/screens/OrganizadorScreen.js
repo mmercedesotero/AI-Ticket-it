@@ -14,6 +14,7 @@ import { useSesion } from "../sesion";
 import { colores, radios } from "../tema";
 import { formatearFechaLarga, formatearPrecio, yaSeRealizo } from "../formato";
 import { imagenDe } from "../imagenes";
+import { textoLugar } from "../lugar";
 
 const CORAL_OSCURO = "#B5503C";
 
@@ -235,6 +236,7 @@ function TarjetaEvento({ datos, navigation }) {
         <View style={styles.tarjetaCuerpo}>
           <Text style={styles.nombre} numberOfLines={1}>{evento.nombre}</Text>
           <Text style={styles.detalle}>{formatearFechaLarga(evento.fecha)}</Text>
+          {evento.lugar && <Text style={styles.detalle} numberOfLines={1}>{textoLugar(evento.lugar)}</Text>}
           <Text style={styles.detalle}>{vendidas} / {capacidad} entradas</Text>
           <View style={styles.progreso}>
             <View style={styles.progresoBarra}>

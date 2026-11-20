@@ -20,6 +20,45 @@ const fechaEn = (dias) => {
 // Fotos de perfil de ejemplo (retratos de prueba de randomuser.me).
 const foto = (genero, numero) => `https://randomuser.me/api/portraits/${genero}/${numero}.jpg`;
 
+// Dónde se hace cada evento de prueba: [nombre del lugar, dirección, ciudad, país].
+const LUGARES = {
+  coldplay: ["Estadio River Plate", "Av. Pres. Figueroa Alcorta 7597", "Buenos Aires", "Argentina"],
+  jazz: ["Teatro Solís", "Buenos Aires 678", "Montevideo", "Uruguay"],
+  hamlet: ["Teatro San Martín", "Av. Corrientes 1530", "Buenos Aires", "Argentina"],
+  lolla: ["Hipódromo de San Isidro", "Av. Márquez 504", "San Isidro", "Argentina"],
+  nocheRock: ["Teatro Flores", "Av. Rivadavia 7806", "Buenos Aires", "Argentina"],
+  cosquin: ["Aeroclub Santa María de Punilla", "Ruta 38 km 70", "Cosquín", "Argentina"],
+  standUp: ["Paseo La Plaza", "Av. Corrientes 1660", "Buenos Aires", "Argentina"],
+  infantil: ["Teatro Gran Rivadavia", "Av. Rivadavia 8636", "Buenos Aires", "Argentina"],
+  monologos: ["Café Comedia Club", "Honduras 5339", "Buenos Aires", "Argentina"],
+  jazzVino: ["Bodega Casa del Valle", "Ruta 7 km 1056", "Mendoza", "Argentina"],
+  tributo: ["Quality Espacio", "Av. Pres. Arturo Illia 20", "Córdoba", "Argentina"],
+  tango: ["Caminito", "Calle Caminito s/n", "Buenos Aires", "Argentina"],
+  romeo: ["Teatro El Nacional", "Av. Corrientes 960", "Buenos Aires", "Argentina"],
+  cuarteto: ["Parque Sarmiento", "Av. Ricardo Rojas s/n", "Córdoba", "Argentina"],
+  electro: ["Costanera Sur", "Av. Tristán Achával Rodríguez 1550", "Buenos Aires", "Argentina"],
+  cisnes: ["Teatro Colón", "Cerrito 628", "Buenos Aires", "Argentina"],
+  navideno: ["Café Comedia Club", "Honduras 5339", "Buenos Aires", "Argentina"],
+  cine: ["Parque Bicentenario", "Av. Bicentenario 3800", "Santiago", "Chile"],
+  bernarda: ["Teatro El Círculo", "Laprida 1223", "Rosario", "Argentina"],
+  sinfonica: ["Teatro El Círculo", "Laprida 1223", "Rosario", "Argentina"],
+  rockRio: ["Isla Sabino Corsi", "Isla Sabino Corsi s/n", "Rosario", "Argentina"],
+  cenaTango: ["Esquina Carlos Gardel", "Av. Carlos Gardel 3200", "Buenos Aires", "Argentina"],
+  superclasico: ["Estadio Diego Armando Maradona", "Calle 25 y 32", "La Plata", "Argentina"],
+  basquet: ["Estadio Luis Conde (La Bombonerita)", "Del Valle Iberlucea 1260", "Buenos Aires", "Argentina"],
+  maraton: ["Parque Tres de Febrero", "Av. Sarmiento s/n", "Buenos Aires", "Argentina"],
+  tenis: ["Buenos Aires Lawn Tennis Club", "Av. Olleros 1510", "Buenos Aires", "Argentina"],
+  boxeo: ["Estadio Luna Park", "Bouchard 465", "Buenos Aires", "Argentina"],
+  rugby: ["Estadio Mario Alberto Kempes", "Av. Cárcano s/n", "Córdoba", "Argentina"],
+  pRuido: ["Complejo Ferial Córdoba", "Av. Cárcano 1000", "Córdoba", "Argentina"],
+  pBallet: ["Teatro El Círculo", "Laprida 1223", "Rosario", "Argentina"],
+  pComedia: ["Café Comedia Club", "Honduras 5339", "Buenos Aires", "Argentina"],
+  pMacbeth: ["Teatro San Martín", "Av. Corrientes 1530", "Buenos Aires", "Argentina"],
+  pVinilo: ["Teatro Flores", "Av. Rivadavia 7806", "Buenos Aires", "Argentina"],
+  pCopa: ["Parque Roca", "Av. Coronel Roca 3500", "Buenos Aires", "Argentina"],
+  pMusica: ["Plaza Independencia", "Av. España y Rivadavia", "Mendoza", "Argentina"],
+};
+
 function cargarDatos() {
   // Todas las cuentas de prueba (compradores y organizadores) tienen la contraseña "123456".
   const clave = hashPassword("123456");
@@ -221,6 +260,8 @@ function cargarDatos() {
     const evento = eventoRepository.save(
       new Evento(undefined, datos.nombre, datos.fecha, datos.descripcion, datos.categoria, tiposEntrada, [], datos.organizador)
     );
+    const [nombreLugar, direccion, ciudad, pais] = LUGARES[datos.id];
+    evento.lugar = { nombre: nombreLugar, direccion, ciudad, pais };
     datos.organizador.eventos.push(evento);
     eventosPorId[datos.id] = evento;
     if (datos.pasado !== undefined) pasados.push([evento, datos.pasado]);

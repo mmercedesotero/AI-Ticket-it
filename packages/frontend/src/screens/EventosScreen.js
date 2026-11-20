@@ -40,6 +40,7 @@ export default function EventosScreen({ navigation }) {
   const [texto, setTexto] = useState("");
   const [textoBuscado, setTextoBuscado] = useState("");
   const [categoriaId, setCategoriaId] = useState(null);
+  const [ciudad, setCiudad] = useState(null);
   const [orden, setOrden] = useState("fecha");
   const [version, setVersion] = useState(0);
   const [paginaFavorito, setPaginaFavorito] = useState(0);
@@ -57,8 +58,8 @@ export default function EventosScreen({ navigation }) {
   // Sin filtros se usa la lista global. Con filtros, el servidor busca, filtra y ordena.
   // Hay una búsqueda o una categoría elegida: se muestran solo los resultados.
   const escribiendo = texto !== "" || textoBuscado !== "";
-  const buscando = escribiendo || categoriaId !== null;
-  const hayFiltros = textoBuscado !== "" || categoriaId !== null || orden !== "fecha";
+  const buscando = escribiendo || categoriaId !== null || ciudad !== null;
+  const hayFiltros = textoBuscado !== "" || categoriaId !== null || ciudad !== null || orden !== "fecha";
 
   useEffect(() => {
     if (!hayFiltros) return;
@@ -67,16 +68,26 @@ export default function EventosScreen({ navigation }) {
     if (orden === "puntaje") params.set("direccion", "desc");
     if (textoBuscado) params.set("texto", textoBuscado);
     if (categoriaId) params.set("categoriaId", String(categoriaId));
+    if (ciudad) params.set("ciudad", ciudad);
 
     get(`/eventos?${params.toString()}`)
       .then(setFiltrados)
       .catch((e) => setError(e.message));
-  }, [hayFiltros, textoBuscado, categoriaId, orden, version]);
+  }, [hayFiltros, textoBuscado, categoriaId, ciudad, orden, version]);
 
   const { refreshProps, indicador } = useRefrescar(async () => {
     await recargar();
     setVersion((v) => v + 1);
   });
+
+  // Ciudades donde hay eventos que todavía no se realizaron (las que tienen más eventos, primero).
+  const cuentaCiudades = {};
+  todos
+    .filter((e) => e.lugar && !yaSeRealizo(e.fecha))
+    .forEach((e) => {
+      cuentaCiudades[e.lugar.ciudad] = (cuentaCiudades[e.lugar.ciudad] ?? 0) + 1;
+    });
+  const ciudades = Object.keys(cuentaCiudades).sort((a, b) => cuentaCiudades[b] - cuentaCiudades[a] || a.localeCompare(b));
 
   // En el inicio solo se muestran los eventos que todavía no se realizaron.
   const eventos = (hayFiltros ? filtrados : todos).filter((e) => !yaSeRealizo(e.fecha));
@@ -146,6 +157,18 @@ export default function EventosScreen({ navigation }) {
               <Chip key={c.id} etiqueta={c.nombre} activo={categoriaId === c.id} onPress={() => setCategoriaId(c.id)} />
             ))}
           </ScrollView>
+
+          {ciudades.length > 1 && (
+            <>
+              <Text style={styles.etiquetaCategorias}>Explorar por ciudad</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+                <Chip etiqueta="Todas" icono="location-outline" activo={ciudad === null} onPress={() => setCiudad(null)} />
+                {ciudades.map((c) => (
+                  <Chip key={c} etiqueta={c} activo={ciudad === c} onPress={() => setCiudad(c)} />
+                ))}
+              </ScrollView>
+            </>
+          )}
         </>
       )}
 
@@ -271,7 +294,7 @@ function TarjetaFavorito({ evento, ancho, onPress, onFavorito }) {
       )}
       <View style={styles.favoritoTextos}>
         <Text style={styles.favoritoNombre} numberOfLines={1}>{evento.nombre}</Text>
-        <Text style={styles.favoritoFecha}>{formatearFechaLarga(evento.fecha)}</Text>
+        <Text style={styles.favoritoFecha} numberOfLines={1}>{formatearFechaLarga(evento.fecha)}{evento.lugar ? ` · ${evento.lugar.ciudad}` : ""}</Text>
       </View>
     </Pressable>
   );

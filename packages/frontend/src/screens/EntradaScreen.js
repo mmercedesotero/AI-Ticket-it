@@ -12,6 +12,7 @@ import { ESTADOS, estiloEstado, codigoDe, esPasada, textoDias, textoReserva } fr
 import { colores, radios } from "../tema";
 import { formatearFechaHora, formatearFechaLarga, formatearPrecio, tiempoRelativo } from "../formato";
 import { imagenDe } from "../imagenes";
+import { abrirEnMapas, direccionCompleta } from "../lugar";
 
 // Qué se muestra en el seguimiento por cada estado por el que pasó la compra.
 const PASOS = {
@@ -101,6 +102,11 @@ export default function EntradaScreen({ route, navigation }) {
 
             <Text style={styles.nombre}>{compra.evento.nombre}</Text>
             <Linea icono="calendar-outline" texto={formatearFechaLarga(compra.evento.fecha)} />
+            {compra.evento.lugar && (
+              <Pressable onPress={() => abrirEnMapas(compra.evento.lugar)} hitSlop={6}>
+                <Linea icono="location-outline" texto={`${direccionCompleta(compra.evento.lugar)} · Cómo llegar`} />
+              </Pressable>
+            )}
             <Linea icono="business-outline" texto={compra.evento.organizador?.nombre ?? "Sin organizador"} />
 
             <View style={styles.datos}>

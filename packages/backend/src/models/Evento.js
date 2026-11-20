@@ -17,6 +17,8 @@ class Evento {
     this.tiposEntrada = tiposEntrada;
     this.multimedia = multimedia;
     this.organizador = organizador;
+    // Dónde se hace el evento: { nombre (del lugar), direccion, ciudad, pais }.
+    this.lugar = null;
     this.portada = null; // imagen de portada (data URI); se entrega por /eventos/:id/portada
   }
 

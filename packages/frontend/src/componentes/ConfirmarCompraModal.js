@@ -8,6 +8,7 @@ import { iconoDe } from "./TarjetaEvento";
 import { colores, radios } from "../tema";
 import { formatearFechaLarga, formatearPrecio } from "../formato";
 import { imagenDe } from "../imagenes";
+import { textoLugar } from "../lugar";
 
 // Hoja "Confirmar compra": resumen del evento, las entradas, la tarjeta y el total antes de pagar.
 export default function ConfirmarCompraModal({ visible, evento, elegidas, tarjetaId, total, onConfirmar, onCancelar }) {
@@ -63,6 +64,12 @@ export default function ConfirmarCompraModal({ visible, evento, elegidas, tarjet
                       <Ionicons name="calendar-outline" size={14} color={colores.textoSuave} />
                       <Text style={styles.lineaTexto}>{formatearFechaLarga(evento.fecha)}</Text>
                     </View>
+                    {evento.lugar && (
+                      <View style={styles.linea}>
+                        <Ionicons name="location-outline" size={14} color={colores.textoSuave} />
+                        <Text style={styles.lineaTexto} numberOfLines={1}>{textoLugar(evento.lugar)}</Text>
+                      </View>
+                    )}
                     <View style={styles.linea}>
                       <Ionicons name="business-outline" size={14} color={colores.textoSuave} />
                       <Text style={styles.lineaTexto} numberOfLines={1}>{evento.organizador?.nombre}</Text>

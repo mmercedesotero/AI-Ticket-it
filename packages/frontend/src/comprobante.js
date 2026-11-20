@@ -6,6 +6,7 @@ import { alerta } from "./dialogo";
 import { codigoDe, ESTADOS } from "./compras";
 import { formatearFechaHora, formatearFechaLarga, formatearPrecio } from "./formato";
 import { imagenDe } from "./imagenes";
+import { direccionCompleta } from "./lugar";
 
 // Evita que un texto con caracteres raros rompa el HTML del PDF.
 const escapar = (texto) =>
@@ -53,6 +54,7 @@ async function ticketHtml(compra) {
       <div class="cuerpo">
         <h1>${escapar(compra.evento.nombre)}</h1>
         <div class="dato">${escapar(formatearFechaLarga(compra.evento.fecha))}</div>
+        ${compra.evento.lugar ? `<div class="dato">Lugar: ${escapar(direccionCompleta(compra.evento.lugar))}</div>` : ""}
         <div class="dato">Organiza: ${escapar(compra.evento.organizador?.nombre ?? "-")}</div>
         <div class="fila">
           <div class="col"><div class="et">ENTRADA</div><div class="val">${escapar(compra.tipoEntrada.nombre)}</div></div>
