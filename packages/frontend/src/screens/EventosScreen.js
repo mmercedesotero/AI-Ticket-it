@@ -239,6 +239,7 @@ function TarjetaFavorito({ evento, ancho, onPress, onFavorito }) {
       </View>
       {agotandose && (
         <View style={styles.insignia}>
+          <Ionicons name="flame" size={13} color={colores.blanco} />
           <Text style={styles.insigniaTexto}>Agotándose</Text>
         </View>
       )}
@@ -282,8 +283,8 @@ const styles = StyleSheet.create({
   },
 
   insignia: {
-    position: "absolute", right: 10, bottom: 62, backgroundColor: colores.acento,
-    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4,
+    position: "absolute", right: 10, bottom: 62, backgroundColor: "#DC2626", flexDirection: "row", alignItems: "center", gap: 4,
+    borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1.5, borderColor: colores.blanco,
   },
   insigniaTexto: { color: colores.blanco, fontWeight: "700", fontSize: 12 },
   buscadorInput: { flex: 1, fontSize: 15, color: colores.indigo },

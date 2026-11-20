@@ -56,12 +56,6 @@ export default function TarjetaEvento({ evento, favorito, onPress, onFavorito })
           <BotonFavorito activo={favorito} onPress={onFavorito} />
         </View>
 
-        {cupo && (
-          <View style={[styles.etiquetaCupo, cupo === "agotado" && styles.etiquetaAgotado]}>
-            <Text style={styles.etiquetaCupoTexto}>{cupo === "agotado" ? "Agotado" : "Agotándose"}</Text>
-          </View>
-        )}
-
         {finalizado && (
           <View style={styles.etiquetaFinalizado}>
             <Text style={styles.etiquetaFinalizadoTexto}>Finalizado</Text>
@@ -80,6 +74,15 @@ export default function TarjetaEvento({ evento, favorito, onPress, onFavorito })
           <Ionicons name="business-outline" size={16} color={colores.textoSuave} />
           <Text style={styles.lineaTexto} numberOfLines={1}>{evento.organizador?.nombre}</Text>
         </View>
+
+        {cupo && (
+          <View style={[styles.cartelCupo, cupo === "agotado" ? styles.cartelAgotado : styles.cartelAgotandose]}>
+            <Ionicons name={cupo === "agotado" ? "close-circle" : "flame"} size={15} color={cupo === "agotado" ? colores.blanco : "#B91C1C"} />
+            <Text style={[styles.cartelCupoTexto, { color: cupo === "agotado" ? colores.blanco : "#B91C1C" }]}>
+              {cupo === "agotado" ? "Agotado" : "¡Últimas entradas! Se está agotando"}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.pie}>
           <View style={styles.precioBloque}>
@@ -111,6 +114,14 @@ const styles = StyleSheet.create({
   },
   etiquetaCategoriaTexto: { fontSize: 12, fontWeight: "700", color: colores.acento },
   corazon: { position: "absolute", top: 10, right: 10 },
+  cartelCupo: {
+    flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 12,
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1,
+  },
+  cartelAgotandose: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" },
+  // "Agotado" va a la derecha y en rojo sólido para que llame la atención.
+  cartelAgotado: { backgroundColor: "#DC2626", borderColor: "#DC2626", alignSelf: "flex-end" },
+  cartelCupoTexto: { fontSize: 13, fontWeight: "800" },
   etiquetaCupo: {
     position: "absolute", bottom: 12, right: 12, backgroundColor: colores.acento,
     borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4,
