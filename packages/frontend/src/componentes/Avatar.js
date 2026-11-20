@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import { API } from "../api";
 import { colores } from "../tema";
 
 // Colores de los "logos" de las organizaciones: cada una toma uno según su nombre.
@@ -31,7 +32,7 @@ export default function Avatar({ foto, nombre = "", tamano = 76, color, organiza
   return (
     <View style={[styles.base, estilo]}>
       {foto && !fallo ? (
-        <Image source={{ uri: foto }} style={estilo} resizeMode="cover" onError={() => setFallo(true)} />
+        <Image source={{ uri: foto.startsWith("/") ? `${API}${foto}` : foto }} style={estilo} resizeMode="cover" onError={() => setFallo(true)} />
       ) : (
         <Text style={[styles.inicial, { fontSize: tamano * (organizacion ? 0.34 : 0.4) }]}>
           {organizacion ? inicialesDe(nombre) : nombre.charAt(0).toUpperCase()}

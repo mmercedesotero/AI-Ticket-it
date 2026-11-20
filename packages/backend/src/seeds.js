@@ -77,6 +77,7 @@ function cargarDatos() {
   const festival = categoriaRepository.save(new Categoria(undefined, "Festival", "Festivales de varios días"));
   const humor = categoriaRepository.save(new Categoria(undefined, "Humor", "Stand-up y comedia en vivo"));
   const danza = categoriaRepository.save(new Categoria(undefined, "Danza", "Ballet, tango y danza contemporánea"));
+  const deportes = categoriaRepository.save(new Categoria(undefined, "Deportes", "Fútbol, básquet, tenis, maratones y más"));
 
   // ---------- Organizadores ----------
   const crearOrganizador = (nombre, email, genero, numeroFoto, telefono, ciudad) => {
@@ -91,6 +92,7 @@ function cargarDatos() {
   const ruidoBlanco = crearOrganizador("Ruido Blanco Producciones", "ruido@mail.com", "men", 41, "+54 3514003333", "Córdoba, Argentina");
   const comediaClub = crearOrganizador("Comedia Club", "comedia@mail.com", "women", 15, "+54 1140004444", "Buenos Aires, Argentina");
   const festivalesSur = crearOrganizador("Festivales del Sur", "sur@mail.com", "men", 85, "+54 2614005555", "Mendoza, Argentina");
+  const arena = crearOrganizador("Arena Deportes", "arena@mail.com", "men", 52, "+54 1140007777", "Buenos Aires, Argentina");
   const salaMayor = crearOrganizador("Sala Mayor", "sala@mail.com", "women", 79, "+54 3414006666", "Rosario, Argentina");
 
   // ---------- Eventos ----------
@@ -166,6 +168,26 @@ function cargarDatos() {
       descripcion: "Cena de tres pasos con show de tango en vivo en un salón histórico. Pocas mesas, ambiente íntimo y espectáculo de primer nivel.",
       entradas: [["Mesa para 2", 60000, "Salón principal", 6]] },
 
+    // --- Deportes ---
+    { id: "superclasico", nombre: "Superclásico Amateur", fecha: fechaEn(16), categoria: deportes, organizador: arena,
+      descripcion: "El clásico del fútbol amateur en un estadio lleno: dos hinchadas, banderas y una tarde de pasión. Se juega con todas las ligas del barrio representadas en las tribunas.",
+      entradas: [["Popular", 12000, "Tribuna popular", 300], ["Platea", 25000, "Platea cubierta", 80]] },
+    { id: "basquet", nombre: "Noche de Básquet: Liga Nacional", fecha: fechaEn(10), categoria: deportes, organizador: arena,
+      descripcion: "Partido de la Liga Nacional de Básquet con show de medio tiempo, triples y mucho ruido en el estadio. Entradas para toda la familia.",
+      entradas: [["Popular", 7000, "Tribuna", 250], ["Platea", 15000, "Platea", 60]] },
+    { id: "maraton", nombre: "Maratón de la Ciudad 21K", fecha: fechaEn(22), categoria: deportes, organizador: arena,
+      descripcion: "La media maratón más linda de la ciudad, con largada frente al río y llegada en el parque. Incluye remera técnica, medalla finisher e hidratación en todo el recorrido.",
+      entradas: [["Corredor 21K", 14000, "Largada principal", 400], ["Corredor 10K", 9000, "Largada principal", 600], ["Acompañante", 3000, "Zona de llegada", 200]] },
+    { id: "tenis", nombre: "Torneo Abierto de Tenis", fecha: fechaEn(35), categoria: deportes, organizador: arena,
+      descripcion: "Una semana de tenis profesional con figuras nacionales e invitados internacionales. Cancha central, canchas laterales y patio gastronómico para pasar el día.",
+      entradas: [["Cancha central", 20000, "Central", 120], ["Cancha lateral", 9000, "Lateral", 200], ["Pase de la semana", 45000, "Todas las canchas", 60]] },
+    { id: "boxeo", nombre: "Noche de Boxeo: Pelea Estelar", fecha: fechaEn(19), categoria: deportes, organizador: arena,
+      descripcion: "Una cartelera de cinco peleas con un combate estelar por el título. Ringside para sentir cada golpe y popular con vista completa del ring.",
+      entradas: [["Ringside", 60000, "Pegado al ring", 12], ["General", 15000, "Tribuna", 200]] },
+    { id: "rugby", nombre: "Final de Rugby del Sur", fecha: fechaEn(50), categoria: deportes, organizador: arena,
+      descripcion: "La gran final del torneo de rugby, con tercer tiempo abierto para el público, patio de comidas y música en vivo al terminar el partido.",
+      entradas: [["Popular", 8000, "Tribuna", 500], ["Platea", 18000, "Platea", 150]] },
+
     // --- Ya realizados (se mueven al pasado al final, para poder tener entradas utilizadas y reseñas) ---
     { id: "pRuido", nombre: "Festival Ruido Blanco 2026", fecha: fechaEn(20), categoria: festival, organizador: ruidoBlanco, pasado: -40,
       descripcion: "La edición 2026 del festival independiente más querido de Córdoba: treinta bandas, tres escenarios y mucha música emergente.",
@@ -182,6 +204,9 @@ function cargarDatos() {
     { id: "pVinilo", nombre: "Rock en Vinilo", fecha: fechaEn(20), categoria: recital, organizador: liveNation, pasado: -12,
       descripcion: "Una noche para escuchar discos clásicos completos, tocados por una banda en vivo y proyectados con arte original.",
       entradas: [["General", 17000, "Campo", 200]] },
+    { id: "pCopa", nombre: "Copa de Fútbol 7 2026", fecha: fechaEn(20), categoria: deportes, organizador: arena, pasado: -20,
+      descripcion: "El torneo de fútbol 7 con 16 equipos y final a estadio abierto, con premiación en la cancha y el tercer tiempo de siempre.",
+      entradas: [["General", 5000, "Tribuna", 300]] },
     { id: "pMusica", nombre: "Fiesta de la Música", fecha: fechaEn(20), categoria: festival, organizador: festivalesSur, pasado: -90,
       descripcion: "Una jornada de bandas locales en plazas y escenarios abiertos, con feria de discos y comida callejera.",
       entradas: [["Pase único", 6000, "Plaza central", 300]] },
@@ -212,7 +237,9 @@ function cargarDatos() {
   favoritos(valentina, "cisnes", "tango", "sinfonica", "bernarda");
   favoritos(joaquin, "jazz", "rockRio", "cine");
   favoritos(sofia, "infantil", "cine", "jazzVino");
-  favoritos(santiago, "coldplay", "tributo", "electro", "rockRio");
+  favoritos(santiago, "coldplay", "tributo", "electro", "rockRio", "superclasico", "boxeo");
+  favoritos(tomas, "basquet", "maraton");
+  favoritos(franco, "superclasico", "tenis");
 
   // ---------- Compras ----------
   const compraService = new CompraService(compraRepository, usuarioRepository, eventoRepository, notificacionService);
@@ -295,6 +322,11 @@ function cargarDatos() {
   resenar(franco, e.pMusica, 1, 1, 4, "Ambiente hermoso, mucha música local de calidad.");
   resenar(benjamin, e.pMusica, 1, 2, 5, "Un plan perfecto para toda la tarde. ¡Que se repita!");
 
+  // Deportes: reseñas del torneo que ya se jugó.
+  resenar(santiago, e.pCopa, 1, 3, 5, "Final de infarto y un clima increíble en la tribuna. ¡Una fiesta!");
+  resenar(franco, e.pCopa, 1, 2, 4, "Muy bien organizado. Solo faltó más cantidad de puestos de comida.");
+  resenar(tomas, e.pCopa, 1, 2, 4, "Buen nivel de juego y entradas baratas. Volvería.");
+
   // Entradas de eventos próximos: confirmadas, pendientes y alguna cancelada.
   comprar(ana, e.coldplay, 1, 2, CONFIRMADA);
   comprar(mer, e.coldplay, 1, 1);
@@ -322,9 +354,23 @@ function cargarDatos() {
   comprar(lucia, e.monologos, 2, 1, CONFIRMADA);
   comprar(lucia, e.navideno, 1, 2);
   comprar(mer, e.bernarda, 1, 2, CANCELADA);
+  comprar(ana, e.romeo, 1, 2, CANCELADA); // entrada pagada y cancelada: queda REEMBOLSADA
   comprar(santiago, e.lolla, 1, 2, CANCELADA);
   comprar(mateo, e.coldplay, 1, 2, CONFIRMADA);
   comprar(santiago, e.coldplay, 2, 1, CONFIRMADA);
+
+  // Deportes: ventas variadas.
+  // Ana: entradas para dos deportes que vienen (fútbol y básquet), una pendiente de pago (maratón) y un torneo ya jugado y usado.
+  comprar(ana, e.superclasico, 2, 2, CONFIRMADA);
+  comprar(ana, e.basquet, 2, 3, CONFIRMADA);
+  comprar(ana, e.maraton, 2, 1);
+  comprar(ana, e.pCopa, 1, 2, UTILIZADA); // todavía sin reseña, para poder puntuarlo
+  comprar(santiago, e.superclasico, 1, 4, CONFIRMADA);
+  comprar(franco, e.superclasico, 1, 2, CONFIRMADA);
+  comprar(tomas, e.basquet, 1, 3, CONFIRMADA);
+  comprar(mateo, e.maraton, 1, 1, CONFIRMADA);
+  comprar(joaquin, e.tenis, 1, 2);
+  comprar(julieta, e.boxeo, 1, 5, CONFIRMADA);
 
   // Eventos casi agotados / agotados (para ver "Agotándose" y las notificaciones del organizador).
   comprar(lucia, e.jazzVino, 1, 4, CONFIRMADA);
@@ -332,6 +378,7 @@ function cargarDatos() {
   comprar(valentina, e.jazzVino, 1, 3, CONFIRMADA); // quedan 2 mesas
   comprar(santiago, e.electro, 1, 20, CONFIRMADA);
   comprar(julieta, e.electro, 1, 7, CONFIRMADA); // quedan 3 Early Bird
+  comprar(santiago, e.boxeo, 1, 7, CONFIRMADA); // el ringside queda con 0 y el evento "casi agotado"
   comprar(sofia, e.cenaTango, 1, 3, CONFIRMADA);
   comprar(camila, e.cenaTango, 1, 3, CONFIRMADA); // agotado
 
@@ -351,6 +398,32 @@ function cargarDatos() {
     ["C", "Buenas tardes, ¿hay guardarropas en la sala?"],
     ["O", "Hola, sí, hay guardarropas sin costo en el hall de entrada."],
   ]);
+
+  // Más conversaciones, con horarios distintos (hace un rato, ayer, hace unos días).
+  const compraLucia = comprar(lucia, e.monologos, 1, 1, CONFIRMADA);
+  const compraMateo = comprar(mateo, e.electro, 2, 1, CONFIRMADA);
+  const compraSantiago = comprar(santiago, e.tributo, 1, 2, CONFIRMADA);
+  chatear(compraLucia, lucia, comediaClub, [
+    ["C", "Hola, ¿se puede ir con menores de edad?"],
+    ["O", "¡Hola Lucía! Es apto para mayores de 16. Con acompañante pueden entrar desde los 14."],
+    ["C", "Perfecto, gracias."],
+  ]);
+  chatear(compraMateo, mateo, ruidoBlanco, [
+    ["C", "Buenas, ¿el ingreso al festival es por la puerta principal?"],
+    ["O", "Hola Mateo, sí. Las puertas abren a las 16 hs. Llevá tu entrada con el QR desde la app."],
+  ]);
+  chatear(compraSantiago, santiago, ruidoBlanco, [
+    ["C", "¿Hay estacionamiento cerca del lugar?"],
+  ]);
+
+  // Ana ya leyó la charla del Stand-Up y la de Tango; el resto queda sin leer para mostrar la diferencia.
+  const horas = (h) => new Date(Date.now() - h * 60 * 60 * 1000);
+  [[compraStandUp, 30], [compraTango, 5], [compraLucia, 26], [compraMateo, 3], [compraSantiago, 1]].forEach(([compra, h]) => {
+    compra.mensajes.forEach((m, i) => {
+      m.fechaHora = horas(h - i * 0.1);
+    });
+  });
+  compraStandUp.lecturas.COMPRADOR = compraStandUp.mensajes.at(-1).id;
 
   // Todos los eventos "ya realizados" se mueven al pasado ahora que ya tienen sus compras.
   pasados.forEach(([evento, dias]) => {
@@ -379,6 +452,14 @@ function cargarDatos() {
     if (lista[i].tipo !== "RESENIA" && nombresPasados.some((nombre) => lista[i].mensaje.includes(nombre))) lista.splice(i, 1);
   }
   lista.forEach((n, i) => {
+    // Los avisos de mensajes siguen el horario y el estado de lectura de su chat.
+    if (n.tipo === "NUEVO_MENSAJE") {
+      const compra = compraRepository.findById(n.compraId);
+      const ultimo = compra.mensajes.at(-1);
+      n.fechaHora = ultimo.fechaHora;
+      n.leida = (compra.lecturas[n.rol] ?? 0) >= ultimo.id;
+      return;
+    }
     const dias = (i * 7) % 13; // 0 a 12 días atrás, bien repartido
     const horas = (i * 5) % 20;
     n.fechaHora = new Date(Date.now() - (dias * 24 + horas) * 60 * 60 * 1000);

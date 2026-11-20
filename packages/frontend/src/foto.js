@@ -3,13 +3,13 @@ import { alerta } from "./dialogo";
 
 // Abre la galería y devuelve la foto elegida como "data URI" (lista para guardar en el servidor),
 // o null si la persona cancela. La calidad es baja a propósito: es una foto de perfil chica.
-export async function elegirFoto() {
+export async function elegirFoto({ aspecto = [1, 1], calidad = 0.25 } = {}) {
   try {
     const resultado = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.25,
+      aspect: aspecto,
+      quality: calidad,
       base64: true,
     });
 

@@ -6,6 +6,7 @@ const Mensaje = require("../models/Mensaje");
 const ForbiddenError = require("../errors/ForbiddenError");
 
 const { HORAS_RESERVA, MS_POR_HORA, creadaEn } = require("../utils/reservas");
+const { fotoPublica } = require("../utils/foto");
 
 class CompraService {
   constructor(compraRepository, usuarioRepository, eventoRepository, notificacionService) {
@@ -140,7 +141,7 @@ class CompraService {
     }));
 
     return {
-      evento: { id: evento.id, nombre: evento.nombre },
+      evento: { id: evento.id, nombre: evento.nombre, fecha: evento.fecha },
       compras,
       entradasDisponibles,
     };
@@ -246,11 +247,50 @@ class CompraService {
     return compra;
   }
   
-  obtenerMensajes(compraId) {
+  // Al abrir el chat, quien lo abre queda al día: sus mensajes pasan a "leídos" y también el aviso que tenía.
+  obtenerMensajes(compraId, rol) {
     const compra = this.compraRepository.findById(compraId);
     if (!compra) throw new NotFoundError("Compra no encontrada");
 
+    if (rol === "COMPRADOR" || rol === "ORGANIZADOR") {
+      const ultimo = compra.mensajes.at(-1);
+      if (ultimo) compra.lecturas[rol] = ultimo.id;
+
+      const persona = rol === "COMPRADOR" ? compra.comprador : compra.evento.organizador;
+      if (this.notificacionService && persona)
+        this.notificacionService.marcarMensajesLeidos(rol, persona.id, compra.id);
+    }
+
     return compra.mensajes;
+  }
+
+  // Los chats de una persona: las compras que tienen mensajes, con el último y cuántos faltan leer.
+  listarChats(rol, personaId) {
+    return this.compraRepository
+      .findAll()
+      .filter((c) => c.mensajes.length > 0)
+      .filter((c) =>
+        rol === "COMPRADOR"
+          ? String(c.comprador.id) === String(personaId)
+          : c.evento.organizador && String(c.evento.organizador.id) === String(personaId)
+      )
+      .map((compra) => {
+        const ultimo = compra.mensajes.at(-1);
+        const leido = compra.lecturas[rol] ?? 0;
+        const contraparte =
+          rol === "COMPRADOR"
+            ? { nombre: compra.evento.organizador?.nombre ?? "Organizador", foto: fotoPublica(compra.evento.organizador, "ORGANIZADOR"), esOrganizacion: true }
+            : { nombre: `${compra.comprador.nombre} ${compra.comprador.apellido}`, foto: fotoPublica(compra.comprador, "COMPRADOR"), esOrganizacion: false };
+
+        return {
+          compraId: compra.id,
+          evento: { id: compra.evento.id, nombre: compra.evento.nombre },
+          contraparte,
+          ultimoMensaje: { texto: ultimo.texto, autorRol: ultimo.autor.rol, fechaHora: ultimo.fechaHora },
+          noLeidos: compra.mensajes.filter((m) => m.autor.rol !== rol && m.id > leido).length,
+        };
+      })
+      .sort((a, b) => new Date(b.ultimoMensaje.fechaHora) - new Date(a.ultimoMensaje.fechaHora));
   }
 
   enviarMensaje(compraId, { autorId, rol, texto } = {}) {
@@ -276,6 +316,19 @@ class CompraService {
 
     const mensaje = new Mensaje(compra.mensajes.length + 1, autor, texto.trim());
     compra.mensajes.push(mensaje);
+    // Quien escribe ya leyó todo lo anterior.
+    compra.lecturas[rol] = mensaje.id;
+
+    // Se le avisa a la otra persona.
+    const destino = rol === "COMPRADOR" ? compra.evento.organizador : compra.comprador;
+    if (this.notificacionService && destino) {
+      this.notificacionService.avisarMensaje(rol === "COMPRADOR" ? "ORGANIZADOR" : "COMPRADOR", destino.id, {
+        compraId: compra.id,
+        remitente: nombre,
+        evento: compra.evento.nombre,
+        texto: mensaje.texto,
+      });
+    }
 
     return mensaje;
   }

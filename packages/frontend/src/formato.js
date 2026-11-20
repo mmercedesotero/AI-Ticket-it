@@ -42,3 +42,17 @@ export const tiempoRelativo = (iso) => {
   if (dias === 1) return "Ayer";
   return `Hace ${dias} días`;
 };
+
+// Para la lista de chats: la hora si fue hoy, "Ayer", o el día y mes ("18 Nov").
+export const horaOFecha = (iso) => {
+  const f = new Date(iso);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const dia = new Date(f);
+  dia.setHours(0, 0, 0, 0);
+  const dias = Math.round((hoy - dia) / 86400000);
+
+  if (dias <= 0) return `${String(f.getHours()).padStart(2, "0")}:${String(f.getMinutes()).padStart(2, "0")}`;
+  if (dias === 1) return "Ayer";
+  return `${f.getDate()} ${MESES[f.getMonth()]}`;
+};

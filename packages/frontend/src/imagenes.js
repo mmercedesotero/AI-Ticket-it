@@ -1,3 +1,5 @@
+import { API } from "./api";
+
 // Fotos de los eventos de prueba, buscadas por nombre del evento.
 // En React Native cada imagen se carga con require() y la ruta tiene que estar escrita a mano.
 const IMAGENES = {
@@ -27,8 +29,17 @@ const IMAGENES = {
   "Macbeth": require("../img/macbeth.jpeg"),
   "Gala de Ballet de Primavera": require("../img/ballet de primavera.jpeg"),
   "Especial Verano: Comedia en Vivo": require("../img/Especial Verano Comedia en Vivo.jpeg"),
+  "Superclásico Amateur": require("../img/Superclásico Amateur.jpeg"),
+  "Noche de Básquet: Liga Nacional": require("../img/Noche de Básquet Liga Nacional.jpeg"),
+  "Maratón de la Ciudad 21K": require("../img/Maratón de la Ciudad 21K.jpg"),
+  "Torneo Abierto de Tenis": require("../img/Torneo Abierto de Tenis.jpeg"),
+  "Noche de Boxeo: Pelea Estelar": require("../img/Noche de boxeo.jpeg"),
+  "Final de Rugby del Sur": require("../img/Final de Rugby del Sur.jpeg"),
+  "Copa de Fútbol 7 2026": require("../img/Copa de Fútbol 7 2026.jpeg"),
   "Festival Ruido Blanco 2026": require("../img/ruido blanco.jpeg"),
 };
 
 // Si el evento no tiene foto (por ejemplo uno recién creado), devuelve null.
-export const imagenDe = (evento) => IMAGENES[evento.nombre] ?? null;
+// Primero la foto local del evento de prueba; si no hay, la portada que subió el organizador (viene del servidor).
+export const imagenDe = (evento) =>
+  IMAGENES[evento.nombre] ?? (evento.portada ? { uri: `${API}${evento.portada}` } : null);

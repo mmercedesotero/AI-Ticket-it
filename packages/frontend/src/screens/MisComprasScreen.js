@@ -1,8 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useScrollToTop } from "@react-navigation/native";
 import { get } from "../api";
 import { useRefrescar } from "../refrescar";
 import CabeceraPantalla from "../componentes/CabeceraPantalla";
@@ -15,6 +15,8 @@ import { formatearFechaLarga, formatearPrecio } from "../formato";
 
 export default function MisComprasScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const lista = useRef(null);
+  useScrollToTop(lista);
   const [compras, setCompras] = useState([]);
   const [pestania, setPestania] = useState("activas");
   const [error, setError] = useState(null);
@@ -52,6 +54,7 @@ export default function MisComprasScreen({ navigation }) {
 
       {indicador}
       <FlatList
+        ref={lista}
         data={visibles}
         {...refreshProps}
         keyExtractor={(compra) => String(compra.id)}

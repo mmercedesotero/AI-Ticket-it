@@ -18,6 +18,7 @@ import RegistroScreen from "./src/screens/RegistroScreen";
 import RecuperarScreen from "./src/screens/RecuperarScreen";
 import TerminosScreen from "./src/screens/TerminosScreen";
 import AyudaScreen from "./src/screens/AyudaScreen";
+import MensajesScreen from "./src/screens/MensajesScreen";
 import PerfilScreen from "./src/screens/PerfilScreen";
 import EventosScreen from "./src/screens/EventosScreen";
 import EventoDetalleScreen from "./src/screens/EventoDetalleScreen";
@@ -141,6 +142,7 @@ export default function App() {
             <Stack.Screen name="Favoritos" component={FavoritosScreen} options={{ title: "Mis favoritos" }} />
             <Stack.Screen name="Entrada" component={EntradaScreen} options={{ title: "Mi entrada" }} />
             <Stack.Screen name="Terminos" component={TerminosScreen} options={{ title: "Términos y Condiciones" }} />
+            <Stack.Screen name="Mensajes" component={MensajesScreen} options={{ title: "Mensajes" }} />
             <Stack.Screen name="Ayuda" component={AyudaScreen} options={{ title: "Ayuda y Soporte" }} />
             <Stack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: "Editar perfil" }} />
             <Stack.Screen name="Tarjetas" component={TarjetasScreen} options={{ title: "Métodos de pago" }} />

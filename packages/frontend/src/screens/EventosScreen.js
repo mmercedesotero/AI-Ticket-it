@@ -1,5 +1,6 @@
 import { useRefrescar } from "../refrescar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useScrollToTop } from "@react-navigation/native";
 import {
   ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet,
   Text, TextInput, useWindowDimensions, View,
@@ -10,6 +11,7 @@ import { get } from "../api";
 import { useSesion } from "../sesion";
 import { useEventos } from "../eventos";
 import Avatar from "../componentes/Avatar";
+import BotonMensajes from "../componentes/BotonMensajes";
 import Chip from "../componentes/Chip";
 import Logo from "../componentes/Logo";
 import BotonFavorito from "../componentes/BotonFavorito";
@@ -28,6 +30,8 @@ const SEPARACION = 12;
 
 export default function EventosScreen({ navigation }) {
   const { sesion } = useSesion();
+  const lista = useRef(null);
+  useScrollToTop(lista);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   // Los eventos, categorías y favoritos vienen del almacén global (se piden una sola vez).
@@ -51,6 +55,9 @@ export default function EventosScreen({ navigation }) {
   }, [texto]);
 
   // Sin filtros se usa la lista global. Con filtros, el servidor busca, filtra y ordena.
+  // Hay una búsqueda o una categoría elegida: se muestran solo los resultados.
+  const escribiendo = texto !== "" || textoBuscado !== "";
+  const buscando = escribiendo || categoriaId !== null;
   const hayFiltros = textoBuscado !== "" || categoriaId !== null || orden !== "fecha";
 
   useEffect(() => {
@@ -85,10 +92,12 @@ export default function EventosScreen({ navigation }) {
       <View style={[styles.cabecera, { paddingTop: insets.top + 12 }]}>
         <View style={styles.cabeceraFila}>
           <Logo tamano={26} claro />
-          <Pressable style={styles.pastilla} onPress={() => navigation.navigate("Perfil")} hitSlop={8}>
-            <Ionicons name="settings-outline" size={20} color={colores.blanco} />
-            <Avatar foto={sesion.usuario.foto} nombre={sesion.usuario.nombre} tamano={36} />
-          </Pressable>
+          <View style={styles.pastilla}>
+            <BotonMensajes color={colores.blanco} />
+            <Pressable onPress={() => navigation.navigate("Perfil")} hitSlop={6}>
+              <Avatar foto={sesion.usuario.foto} nombre={sesion.usuario.nombre} tamano={36} />
+            </Pressable>
+          </View>
         </View>
 
         <Text style={styles.saludo}>
@@ -107,6 +116,17 @@ export default function EventosScreen({ navigation }) {
             value={texto}
             onChangeText={setTexto}
           />
+          {texto !== "" && (
+            <Pressable
+              onPress={() => {
+                setTexto("");
+                setTextoBuscado(""); // vuelve todo a la normalidad enseguida, sin esperar la pausa de la búsqueda
+              }}
+              hitSlop={10}
+            >
+              <Ionicons name="close-circle" size={20} color={colores.textoPlaceholder} />
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -117,68 +137,80 @@ export default function EventosScreen({ navigation }) {
   const contenidoLista = (
     <View>
       <View style={styles.cuerpo}>
-      <Text style={styles.etiquetaCategorias}>Explorar categorías</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        <Chip etiqueta="Todas" activo={categoriaId === null} onPress={() => setCategoriaId(null)} />
-        {categorias.map((c) => (
-          <Chip key={c.id} etiqueta={c.nombre} activo={categoriaId === c.id} onPress={() => setCategoriaId(c.id)} />
-        ))}
-      </ScrollView>
-
-      <View style={styles.tituloSeccion}>
-        <Text style={styles.seccion}>Mis favoritos</Text>
-        {favoritosVigentes.length > 0 && (
-          <Pressable onPress={() => navigation.navigate("Favoritos")} hitSlop={8}>
-            <Text style={styles.verTodos}>Ver todos  →</Text>
-          </Pressable>
-        )}
-      </View>
-
-      {favoritosVigentes.length === 0 ? (
-        <Text style={styles.sinFavoritos}>Tocá el ♡ de un evento para guardarlo acá.</Text>
-      ) : (
-        <View>
-          <FlatList
-            horizontal
-            data={favoritosVigentes}
-            keyExtractor={(evento) => String(evento.id)}
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={anchoTarjeta + SEPARACION}
-            decelerationRate="fast"
-            onMomentumScrollEnd={(e) =>
-              setPaginaFavorito(Math.round(e.nativeEvent.contentOffset.x / (anchoTarjeta + SEPARACION)))
-            }
-            renderItem={({ item }) => (
-              <TarjetaFavorito
-                evento={item}
-                ancho={anchoTarjeta}
-                onPress={() => abrir(item)}
-                onFavorito={() => alternarFavorito(item)}
-              />
-            )}
-          />
-          {favoritosVigentes.length > 1 && (
-            <View style={styles.puntos}>
-              {favoritosVigentes.map((e, i) => (
-                <View key={e.id} style={[styles.punto, i === paginaFavorito && styles.puntoActivo]} />
-              ))}
-            </View>
-          )}
-        </View>
+      {!escribiendo && (
+        <>
+          <Text style={styles.etiquetaCategorias}>Explorar categorías</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            <Chip etiqueta="Todas" activo={categoriaId === null} onPress={() => setCategoriaId(null)} />
+            {categorias.map((c) => (
+              <Chip key={c.id} etiqueta={c.nombre} activo={categoriaId === c.id} onPress={() => setCategoriaId(c.id)} />
+            ))}
+          </ScrollView>
+        </>
       )}
 
-      <Text style={[styles.seccion, styles.seccionProximos]}>Próximos eventos</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {ORDENES.map((o) => (
-          <Chip
-            key={o.clave}
-            etiqueta={o.etiqueta}
-            icono={o.icono}
-            activo={orden === o.clave}
-            onPress={() => setOrden(o.clave)}
-          />
-        ))}
-      </ScrollView>
+      {/* Al buscar o filtrar los favoritos se esconden: los resultados tienen que verse primero. */}
+      {!buscando && (
+        <>
+        <View style={styles.tituloSeccion}>
+          <Text style={styles.seccion}>Mis favoritos</Text>
+          {favoritosVigentes.length > 0 && (
+            <Pressable onPress={() => navigation.navigate("Favoritos")} hitSlop={8}>
+              <Text style={styles.verTodos}>Ver todos  →</Text>
+            </Pressable>
+          )}
+        </View>
+
+        {favoritosVigentes.length === 0 ? (
+          <Text style={styles.sinFavoritos}>Tocá el ♡ de un evento para guardarlo acá.</Text>
+        ) : (
+          <View>
+            <FlatList
+              horizontal
+              data={favoritosVigentes}
+              keyExtractor={(evento) => String(evento.id)}
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={anchoTarjeta + SEPARACION}
+              decelerationRate="fast"
+              onMomentumScrollEnd={(e) =>
+                setPaginaFavorito(Math.round(e.nativeEvent.contentOffset.x / (anchoTarjeta + SEPARACION)))
+              }
+              renderItem={({ item }) => (
+                <TarjetaFavorito
+                  evento={item}
+                  ancho={anchoTarjeta}
+                  onPress={() => abrir(item)}
+                  onFavorito={() => alternarFavorito(item)}
+                />
+              )}
+            />
+            {favoritosVigentes.length > 1 && (
+              <View style={styles.puntos}>
+                {favoritosVigentes.map((e, i) => (
+                  <View key={e.id} style={[styles.punto, i === paginaFavorito && styles.puntoActivo]} />
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        </>
+      )}
+
+      <Text style={[styles.seccion, styles.seccionProximos, escribiendo && { marginTop: 16 }]}>{buscando ? "Resultados" : "Próximos eventos"}</Text>
+      {!escribiendo && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {ORDENES.map((o) => (
+            <Chip
+              key={o.clave}
+              etiqueta={o.etiqueta}
+              icono={o.icono}
+              activo={orden === o.clave}
+              onPress={() => setOrden(o.clave)}
+            />
+          ))}
+        </ScrollView>
+      )}
       <View style={{ height: 8 }} />
       </View>
     </View>
@@ -190,6 +222,7 @@ export default function EventosScreen({ navigation }) {
       {encabezado}
       {indicador}
       <FlatList
+        ref={lista}
         data={eventos}
         {...refreshProps}
         keyExtractor={(evento) => String(evento.id)}
@@ -232,6 +265,7 @@ function TarjetaFavorito({ evento, ancho, onPress, onFavorito }) {
       </View>
       {agotandose && (
         <View style={styles.insignia}>
+          <Ionicons name="flame" size={13} color={colores.blanco} />
           <Text style={styles.insigniaTexto}>Agotándose</Text>
         </View>
       )}
@@ -255,7 +289,7 @@ const styles = StyleSheet.create({
   cabeceraFila: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   pastilla: {
     flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 24, paddingLeft: 12, paddingRight: 4, height: 44,
+    borderRadius: 24, paddingLeft: 4, paddingRight: 4, height: 44,
   },
   avatar: {
     width: 36, height: 36, borderRadius: 18, backgroundColor: colores.acento,
@@ -275,8 +309,8 @@ const styles = StyleSheet.create({
   },
 
   insignia: {
-    position: "absolute", right: 10, bottom: 62, backgroundColor: colores.acento,
-    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4,
+    position: "absolute", right: 10, bottom: 62, backgroundColor: "#DC2626", flexDirection: "row", alignItems: "center", gap: 4,
+    borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1.5, borderColor: colores.blanco,
   },
   insigniaTexto: { color: colores.blanco, fontWeight: "700", fontSize: 12 },
   buscadorInput: { flex: 1, fontSize: 15, color: colores.indigo },
