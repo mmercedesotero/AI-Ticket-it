@@ -1,6 +1,7 @@
 const Evento = require("../models/Evento");
 const ValidationError = require("../errors/ValidationError");
 const pick = require("../utils/pick");
+const { validarImagen } = require("../utils/imagen");
 const Entrada = require("../models/Entrada");
 const NotFoundError = require("../errors/NotFoundError");
 
@@ -137,6 +138,8 @@ class EventoService {
       return new Entrada(i + 1, nombre.trim(), precio, ubicacion, cupoDisponible);
     });
 
+    const portada = validarImagen(datos.portada, "La portada");
+
     const categoria = this.categoriaRepository.findById(categoriaId);
     if (!categoria) throw new NotFoundError("Categoría no encontrada");
 
@@ -153,6 +156,7 @@ class EventoService {
       datos.multimedia ?? [],
       organizador
     );
+    evento.portada = portada;
     if (evento.yaSeRealizo())
       throw new ValidationError("La fecha del evento no puede ser pasada");
 
@@ -171,10 +175,10 @@ class EventoService {
   }
 
   actualizar(id, datos) {
-    return this.eventoRepository.update(
-      id,
-      pick(datos, ["nombre", "fecha", "descripcion", "categoria", "tiposEntrada", "multimedia"])
-    );
+    const cambios = pick(datos, ["nombre", "fecha", "descripcion", "categoria", "tiposEntrada", "multimedia", "portada"]);
+    if ("portada" in cambios) cambios.portada = validarImagen(cambios.portada, "La portada");
+
+    return this.eventoRepository.update(id, cambios);
   }
 
   eliminar(id) {

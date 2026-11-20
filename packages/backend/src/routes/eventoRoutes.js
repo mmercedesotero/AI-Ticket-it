@@ -11,6 +11,7 @@ const controllers = new EventoController(eventoService);
 const router = express.Router();
 
 router.get("/", controllers.obtenerTodos);
+router.get("/:id/portada", controllers.portada);
 router.get("/:id", controllers.obtenerPorId);
 router.post("/", auth, auth.soloOrganizador, controllers.crear);
 router.put("/:id", auth, auth.soloOrganizador, controllers.actualizar);

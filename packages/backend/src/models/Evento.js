@@ -17,6 +17,12 @@ class Evento {
     this.tiposEntrada = tiposEntrada;
     this.multimedia = multimedia;
     this.organizador = organizador;
+    this.portada = null; // imagen de portada (data URI); se entrega por /eventos/:id/portada
+  }
+
+  // La imagen no se manda dentro del JSON (pesa mucho): se avisa dónde pedirla.
+  toJSON() {
+    return { ...this, portada: this.portada ? `/eventos/${this.id}/portada` : null };
   }
 
   tuPrecioEstaEntre(min, max) {

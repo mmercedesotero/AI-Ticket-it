@@ -1,3 +1,5 @@
+import { API } from "./api";
+
 // Fotos de los eventos de prueba, buscadas por nombre del evento.
 // En React Native cada imagen se carga con require() y la ruta tiene que estar escrita a mano.
 const IMAGENES = {
@@ -31,4 +33,6 @@ const IMAGENES = {
 };
 
 // Si el evento no tiene foto (por ejemplo uno recién creado), devuelve null.
-export const imagenDe = (evento) => IMAGENES[evento.nombre] ?? null;
+// Primero la foto local del evento de prueba; si no hay, la portada que subió el organizador (viene del servidor).
+export const imagenDe = (evento) =>
+  IMAGENES[evento.nombre] ?? (evento.portada ? { uri: `${API}${evento.portada}` } : null);

@@ -4,7 +4,9 @@ import {
   Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "react-native";
 import { enviar } from "../api";
+import { elegirFoto } from "../foto";
 import { useEventos } from "../eventos";
 import { colores, estilosBase, radios } from "../tema";
 
@@ -17,6 +19,12 @@ export default function CrearEventoScreen({ navigation }) {
   const [descripcion, setDescripcion] = useState("");
   const [categoriaId, setCategoriaId] = useState(null);
   const [entradas, setEntradas] = useState([entradaVacia()]);
+  const [portada, setPortada] = useState(null);
+
+  const elegirPortada = async () => {
+    const imagen = await elegirFoto({ aspecto: [16, 9], calidad: 0.35 });
+    if (imagen) setPortada(imagen);
+  };
 
   const cambiarEntrada = (indice, campo, valor) =>
     setEntradas((actuales) =>
@@ -34,6 +42,7 @@ export default function CrearEventoScreen({ navigation }) {
         fecha,
         descripcion,
         categoriaId,
+        portada,
         tiposEntrada: entradas.map((e) => ({
           nombre: e.nombre,
           precio: e.precio.trim() === "" ? undefined : Number(e.precio),
@@ -58,13 +67,28 @@ export default function CrearEventoScreen({ navigation }) {
       automaticallyAdjustKeyboardInsets
       keyboardDismissMode="interactive"
     >
-      <Pressable
-        style={styles.portada}
-        onPress={() => alerta("Imagen de portada", "La carga de imágenes todavía no está disponible.")}
-      >
-        <Ionicons name="cloud-upload-outline" size={34} color={colores.acento} />
-        <Text style={styles.portadaTitulo}>Subir imagen de portada</Text>
-        <Text style={styles.portadaAyuda}>Disponible próximamente</Text>
+      <Pressable style={[styles.portada, portada && styles.portadaConImagen]} onPress={elegirPortada}>
+        {portada ? (
+          <>
+            <Image source={{ uri: portada }} style={styles.portadaImagen} resizeMode="cover" />
+            <View style={styles.portadaAcciones}>
+              <View style={styles.portadaBoton}>
+                <Ionicons name="image-outline" size={14} color={colores.blanco} />
+                <Text style={styles.portadaBotonTexto}>Cambiar</Text>
+              </View>
+              <Pressable style={styles.portadaBoton} onPress={() => setPortada(null)} hitSlop={6}>
+                <Ionicons name="trash-outline" size={14} color={colores.blanco} />
+                <Text style={styles.portadaBotonTexto}>Quitar</Text>
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <>
+            <Ionicons name="cloud-upload-outline" size={34} color={colores.acento} />
+            <Text style={styles.portadaTitulo}>Subir imagen de portada</Text>
+            <Text style={styles.portadaAyuda}>Elegila de tu galería (formato horizontal)</Text>
+          </>
+        )}
       </Pressable>
 
       <Text style={styles.label}>Nombre del evento</Text>
@@ -182,6 +206,14 @@ export default function CrearEventoScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  portadaConImagen: { padding: 0, overflow: "hidden", borderStyle: "solid" },
+  portadaImagen: { width: "100%", aspectRatio: 16 / 9 },
+  portadaAcciones: { position: "absolute", right: 10, bottom: 10, flexDirection: "row", gap: 8 },
+  portadaBoton: {
+    flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(15,23,42,0.7)",
+    borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6,
+  },
+  portadaBotonTexto: { color: colores.blanco, fontSize: 12, fontWeight: "700" },
   fondo: { flex: 1, backgroundColor: colores.blanco },
   contenedor: { padding: 16, paddingBottom: 48 },
 
