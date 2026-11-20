@@ -14,6 +14,7 @@ class CompraController {
     this.pagar = this.pagar.bind(this);
     this.obtenerMensajes = this.obtenerMensajes.bind(this);
     this.enviarMensaje = this.enviarMensaje.bind(this);
+    this.chats = this.chats.bind(this);
     this.exigirDuenio = this.exigirDuenio.bind(this);
     this.exigirParticipante = this.exigirParticipante.bind(this);
   }
@@ -78,9 +79,15 @@ class CompraController {
     res.json(this.compraService.pagarCompra(req.params.id, tarjeta));
   }
 
+  // Lista de chats de quien pregunta (comprador u organizador).
+  chats(req, res) {
+    const personaId = req.rol === "COMPRADOR" ? req.usuario.id : req.organizador.id;
+    res.json(this.compraService.listarChats(req.rol, personaId));
+  }
+
   obtenerMensajes(req, res) {
     this.exigirParticipante(req);
-    res.json(this.compraService.obtenerMensajes(req.params.id));
+    res.json(this.compraService.obtenerMensajes(req.params.id, req.rol));
   }
 
   enviarMensaje(req, res) {

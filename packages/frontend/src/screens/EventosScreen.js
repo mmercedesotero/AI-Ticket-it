@@ -10,6 +10,7 @@ import { get } from "../api";
 import { useSesion } from "../sesion";
 import { useEventos } from "../eventos";
 import Avatar from "../componentes/Avatar";
+import BotonMensajes from "../componentes/BotonMensajes";
 import Chip from "../componentes/Chip";
 import Logo from "../componentes/Logo";
 import BotonFavorito from "../componentes/BotonFavorito";
@@ -85,10 +86,12 @@ export default function EventosScreen({ navigation }) {
       <View style={[styles.cabecera, { paddingTop: insets.top + 12 }]}>
         <View style={styles.cabeceraFila}>
           <Logo tamano={26} claro />
-          <Pressable style={styles.pastilla} onPress={() => navigation.navigate("Perfil")} hitSlop={8}>
-            <Ionicons name="settings-outline" size={20} color={colores.blanco} />
-            <Avatar foto={sesion.usuario.foto} nombre={sesion.usuario.nombre} tamano={36} />
-          </Pressable>
+          <View style={styles.pastilla}>
+            <BotonMensajes color={colores.blanco} />
+            <Pressable onPress={() => navigation.navigate("Perfil")} hitSlop={6}>
+              <Avatar foto={sesion.usuario.foto} nombre={sesion.usuario.nombre} tamano={36} />
+            </Pressable>
+          </View>
         </View>
 
         <Text style={styles.saludo}>
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
   cabeceraFila: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   pastilla: {
     flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 24, paddingLeft: 12, paddingRight: 4, height: 44,
+    borderRadius: 24, paddingLeft: 4, paddingRight: 4, height: 44,
   },
   avatar: {
     width: 36, height: 36, borderRadius: 18, backgroundColor: colores.acento,

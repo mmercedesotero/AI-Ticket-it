@@ -25,12 +25,14 @@ const TIPOS = {
   RESENIA: { icono: "star", color: colores.acento, fondo: colores.acentoSuave },
   RECORDATORIO_PAGO: { icono: "hourglass-outline", color: colores.acento, fondo: colores.acentoSuave },
   RESERVA_VENCIDA: { icono: "time-outline", color: colores.textoSuave, fondo: "#F1F5F9" },
+  EVENTO_MODIFICADO: { icono: "calendar-outline", color: "#2563EB", fondo: "#DBEAFE" },
+  NUEVO_MENSAJE: { icono: "chatbubble-ellipses", color: "#2563EB", fondo: "#DBEAFE" },
   POCAS_ENTRADAS: { icono: "flame", color: colores.acento, fondo: colores.acentoSuave },
   SIN_VENTAS: { icono: "trending-down-outline", color: "#1E3A8A", fondo: "#DBEAFE" },
 };
 
 // "Actualizaciones": avisos sobre eventos (no sobre movimientos de tu compra).
-const ACTUALIZACIONES = ["EVENTO_PUBLICADO", "EVENTO_AGOTADO", "RECORDATORIO", "RECORDATORIO_PAGO", "POCAS_ENTRADAS", "SIN_VENTAS", "RESENIA"];
+const ACTUALIZACIONES = ["EVENTO_PUBLICADO", "EVENTO_AGOTADO", "RECORDATORIO", "RECORDATORIO_PAGO", "NUEVO_MENSAJE", "POCAS_ENTRADAS", "SIN_VENTAS", "EVENTO_MODIFICADO", "RESENIA"];
 
 // Atajo que se muestra al pie de cada aviso: [texto, pestaña a la que lleva].
 const ATAJOS = {
@@ -42,9 +44,12 @@ const ATAJOS = {
   RECORDATORIO: ["Ver mi entrada", "Mis compras"],
   RECORDATORIO_PAGO: ["Pagar ahora", "Mis compras"],
   RESERVA_VENCIDA: ["Ver mis compras", "Mis compras"],
+  NUEVO_MENSAJE: ["Abrir chat", "Chat"],
+  EVENTO_MODIFICADO: ["Ver mis compras", "Mis compras"],
   EVENTO_AGOTADO: ["Ver mis eventos", "Mis eventos"],
   EVENTO_PUBLICADO: ["Ver mis eventos", "Mis eventos"],
   RESENIA: ["Ver mis eventos", "Mis eventos"],
+  NUEVO_MENSAJE: ["Abrir chat", "Chat"],
 };
 
 // Lo mismo para el organizador: todos llevan a sus eventos.
@@ -104,8 +109,10 @@ export default function NotificacionesScreen({ navigation }) {
     { clave: "actualizaciones", etiqueta: `Novedades (${cantidadActualizaciones})` },
   ];
 
+  // Tocar un aviso lo marca como leído; si es de un mensaje, abre su chat.
   const tocar = (n) => {
     if (!n.leida) marcarLeida(n.id);
+    if (n.compraId) navigation.navigate("Chat", { compraId: n.compraId });
   };
 
   return (
@@ -161,7 +168,7 @@ export default function NotificacionesScreen({ navigation }) {
                     {tiempoRelativo(item.fechaHora)} · {formatearFechaHora(item.fechaHora)}
                   </Text>
                   {atajoValido && (
-                    <Pressable onPress={() => navigation.navigate(atajo[1])} hitSlop={8}>
+                    <Pressable onPress={() => (atajo[1] === "Chat" ? tocar(item) : navigation.navigate(atajo[1]))} hitSlop={8}>
                       <Text style={styles.atajo}>{atajo[0]} →</Text>
                     </Pressable>
                   )}

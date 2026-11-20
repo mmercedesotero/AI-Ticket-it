@@ -13,6 +13,7 @@ const router = express.Router();
 router.use(auth);
 
 router.get("/", controllers.obtenerTodos);
+router.get("/chats", controllers.chats);
 router.get("/:id", controllers.obtenerPorId);
 router.post("/", auth.soloComprador, controllers.crear);
 router.put("/:id/cancelar", auth.soloComprador, controllers.cancelar);

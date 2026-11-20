@@ -110,6 +110,7 @@ export default function PerfilScreen({ navigation }) {
       </View>
 
       <View style={styles.lista}>
+        <Fila icono="chatbubble-ellipses-outline" texto="Mensajes" onPress={() => navigation.navigate("Mensajes")} />
         <Fila icono="create-outline" texto="Editar perfil" onPress={() => navigation.navigate("EditarPerfil")} />
         {!esOrganizador && (
           <Fila icono="heart-outline" texto="Mis favoritos" onPress={() => navigation.navigate("Favoritos")} />

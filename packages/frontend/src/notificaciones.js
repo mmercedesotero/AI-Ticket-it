@@ -12,11 +12,21 @@ const CADA_CUANTO_MS = 8000;
 export function NotificacionesProvider({ children }) {
   const [notificaciones, setNotificaciones] = useState([]);
   const [noLeidas, setNoLeidas] = useState(0);
+  const [mensajesSinLeer, setMensajesSinLeer] = useState(0); // chats con mensajes sin leer
 
   const aplicar = (datos) => {
     setNotificaciones(datos.notificaciones);
     setNoLeidas(datos.noLeidas);
   };
+
+  const recargarMensajes = useCallback(async () => {
+    try {
+      const chats = await get("/compras/chats");
+      setMensajesSinLeer(chats.filter((c) => c.noLeidos > 0).length);
+    } catch {
+      // Si falla, se queda lo que ya había.
+    }
+  }, []);
 
   const recargar = useCallback(async () => {
     try {
@@ -24,7 +34,8 @@ export function NotificacionesProvider({ children }) {
     } catch {
       // Si falla, se queda lo que ya había.
     }
-  }, []);
+    recargarMensajes();
+  }, [recargarMensajes]);
 
   useEffect(() => {
     recargar();
@@ -49,8 +60,8 @@ export function NotificacionesProvider({ children }) {
   }, []);
 
   const valor = useMemo(
-    () => ({ notificaciones, noLeidas, recargar, marcarLeida, marcarTodasLeidas }),
-    [notificaciones, noLeidas, recargar, marcarLeida, marcarTodasLeidas]
+    () => ({ notificaciones, noLeidas, mensajesSinLeer, recargar, recargarMensajes, marcarLeida, marcarTodasLeidas }),
+    [notificaciones, noLeidas, mensajesSinLeer, recargar, recargarMensajes, marcarLeida, marcarTodasLeidas]
   );
 
   return <NotificacionesContext.Provider value={valor}>{children}</NotificacionesContext.Provider>;

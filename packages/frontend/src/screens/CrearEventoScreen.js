@@ -1,25 +1,64 @@
 import { alerta } from "../dialogo";
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
-  Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "react-native";
-import { enviar } from "../api";
+import { API, enviar, get } from "../api";
 import { elegirFoto } from "../foto";
 import { useEventos } from "../eventos";
+import Chip from "../componentes/Chip";
 import { colores, estilosBase, radios } from "../tema";
 
 const entradaVacia = () => ({ nombre: "", precio: "", ubicacion: "", cupo: "" });
 
-export default function CrearEventoScreen({ navigation }) {
+// Sirve para crear un evento nuevo y, si llega "eventoId", para editar uno existente (y eliminarlo).
+export default function CrearEventoScreen({ route, navigation }) {
+  const eventoId = route.params?.eventoId;
+  const editando = eventoId !== undefined;
+
   const { categorias, recargar } = useEventos();
+  const [cargando, setCargando] = useState(editando);
   const [nombre, setNombre] = useState("");
   const [fecha, setFecha] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [categoriaId, setCategoriaId] = useState(null);
   const [entradas, setEntradas] = useState([entradaVacia()]);
   const [portada, setPortada] = useState(null);
+  const [portadaOriginal, setPortadaOriginal] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: editando ? "Editar evento" : "Crear Evento" });
+  }, [navigation, editando]);
+
+  // Al editar se cargan los datos actuales del evento.
+  useEffect(() => {
+    if (!editando) return;
+
+    get(`/eventos/${eventoId}`)
+      .then((evento) => {
+        setNombre(evento.nombre);
+        setFecha(evento.fecha);
+        setDescripcion(evento.descripcion ?? "");
+        setCategoriaId(evento.categoria?.id ?? null);
+        setEntradas(
+          evento.tiposEntrada.map((t) => ({
+            id: t.id,
+            nombre: t.nombre,
+            precio: String(t.precio),
+            ubicacion: t.ubicacion ?? "",
+            cupo: String(t.cupoDisponible),
+          }))
+        );
+        const actual = evento.portada ? `${API}${evento.portada}` : null;
+        setPortada(actual);
+        setPortadaOriginal(actual);
+      })
+      .catch((e) => alerta("No se pudo cargar el evento", e.message, [{ text: "Volver", onPress: () => navigation.goBack() }]))
+      .finally(() => setCargando(false));
+  }, [editando, eventoId, navigation]);
 
   const elegirPortada = async () => {
     const imagen = await elegirFoto({ aspecto: [16, 9], calidad: 0.35 });
@@ -35,29 +74,74 @@ export default function CrearEventoScreen({ navigation }) {
     setEntradas((actuales) => actuales.filter((_, i) => i !== indice));
 
   // El precio y el cupo se escriben como texto: hay que pasarlos a número antes de enviarlos.
-  const publicar = async () => {
+  const tiposEntrada = () =>
+    entradas.map((e) => ({
+      id: e.id,
+      nombre: e.nombre,
+      precio: e.precio.trim() === "" ? undefined : Number(e.precio),
+      ubicacion: e.ubicacion,
+      cupoDisponible: e.cupo.trim() === "" ? undefined : Number(e.cupo),
+    }));
+
+  const guardar = async () => {
+    if (guardando) return;
+    setGuardando(true);
+
     try {
-      const evento = await enviar("POST", "/eventos", {
-        nombre,
-        fecha,
-        descripcion,
-        categoriaId,
-        portada,
-        tiposEntrada: entradas.map((e) => ({
-          nombre: e.nombre,
-          precio: e.precio.trim() === "" ? undefined : Number(e.precio),
-          ubicacion: e.ubicacion,
-          cupoDisponible: e.cupo.trim() === "" ? undefined : Number(e.cupo),
-        })),
-      });
-      recargar(); // para que el evento nuevo aparezca en la lista global
-      alerta("¡Evento publicado!", evento.nombre, [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      if (editando) {
+        // La portada solo se manda si cambió: una nueva (data URI) o quitada (null).
+        const cambioPortada =
+          portada && portada.startsWith("data:") ? { portada } : portada === null && portadaOriginal ? { portada: null } : {};
+
+        const evento = await enviar("PUT", `/eventos/${eventoId}`, {
+          nombre, fecha, descripcion, categoriaId, ...cambioPortada, tiposEntrada: tiposEntrada(),
+        });
+        recargar();
+        alerta("¡Cambios guardados!", evento.nombre, [{ text: "Perfecto", onPress: () => navigation.goBack() }]);
+      } else {
+        const evento = await enviar("POST", "/eventos", {
+          nombre, fecha, descripcion, categoriaId, portada, tiposEntrada: tiposEntrada(),
+        });
+        recargar(); // para que el evento nuevo aparezca en la lista global
+        alerta("¡Evento publicado!", evento.nombre, [{ text: "OK", onPress: () => navigation.goBack() }]);
+      }
     } catch (e) {
-      alerta("No se pudo publicar", e.message);
+      alerta(editando ? "No se pudo guardar" : "No se pudo publicar", e.message);
+    } finally {
+      setGuardando(false);
     }
   };
+
+  const eliminar = () =>
+    alerta(
+      "Eliminar evento",
+      "Se van a cancelar las compras activas y se reembolsará a quienes ya pagaron. Esta acción no se puede deshacer.",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Sí, eliminar",
+          style: "destructive",
+          onPress: async () => {
+            setEliminando(true);
+            try {
+              const respuesta = await enviar("DELETE", `/eventos/${eventoId}`);
+              recargar();
+              const n = respuesta.comprasCanceladas;
+              alerta(
+                "Evento eliminado",
+                n > 0 ? `Se cancelaron ${n} ${n === 1 ? "compra" : "compras"} y se avisó a los compradores.` : "El evento ya no está a la venta.",
+                [{ text: "Listo", onPress: () => navigation.popToTop() }]
+              );
+            } catch (e) {
+              setEliminando(false);
+              alerta("No se pudo eliminar", e.message);
+            }
+          },
+        },
+      ]
+    );
+
+  if (cargando) return <ActivityIndicator style={{ marginTop: 80 }} size="large" color={colores.acento} />;
 
   return (
     <ScrollView
@@ -112,6 +196,7 @@ export default function CrearEventoScreen({ navigation }) {
           autoCapitalize="none"
         />
       </View>
+      {editando && <Text style={styles.ayuda}>Si cambiás la fecha, les avisamos a quienes ya compraron.</Text>}
 
       <Text style={styles.label}>Descripción</Text>
       <TextInput
@@ -126,19 +211,13 @@ export default function CrearEventoScreen({ navigation }) {
       <Text style={styles.label}>Categoría</Text>
       <View style={styles.chips}>
         {categorias.map((c) => (
-          <Pressable
-            key={c.id}
-            onPress={() => setCategoriaId(c.id)}
-            style={[styles.chip, categoriaId === c.id && styles.chipActivo]}
-          >
-            <Text style={[styles.chipTexto, categoriaId === c.id && styles.chipTextoActivo]}>{c.nombre}</Text>
-          </Pressable>
+          <Chip key={c.id} etiqueta={c.nombre} activo={categoriaId === c.id} onPress={() => setCategoriaId(c.id)} />
         ))}
       </View>
 
       <Text style={styles.seccion}>Tipos de entrada</Text>
       {entradas.map((e, i) => (
-        <View key={i} style={styles.entrada}>
+        <View key={e.id ?? `nueva-${i}`} style={styles.entrada}>
           <Text style={styles.label}>Nombre de la entrada</Text>
           <TextInput
             style={styles.campo}
@@ -173,7 +252,7 @@ export default function CrearEventoScreen({ navigation }) {
               />
             </View>
             <View style={styles.columna}>
-              <Text style={styles.label}>Capacidad</Text>
+              <Text style={styles.label}>{e.id ? "Cupo disponible" : "Capacidad"}</Text>
               <TextInput
                 style={styles.campo}
                 placeholder="Ej. 1.500"
@@ -185,7 +264,8 @@ export default function CrearEventoScreen({ navigation }) {
             </View>
           </View>
 
-          {entradas.length > 1 && (
+          {/* Las entradas que ya existían no se pueden quitar: pueden tener ventas. */}
+          {!e.id && entradas.length > 1 && (
             <Pressable onPress={() => quitarEntrada(i)}>
               <Text style={styles.quitar}>Quitar esta entrada</Text>
             </Pressable>
@@ -198,14 +278,26 @@ export default function CrearEventoScreen({ navigation }) {
         <Text style={styles.agregarTexto}>Agregar otro tipo de entrada</Text>
       </Pressable>
 
-      <Pressable style={[estilosBase.botonPrimario, styles.publicar]} onPress={publicar}>
-        <Text style={estilosBase.botonPrimarioTexto}>Publicar Evento</Text>
+      <Pressable style={[estilosBase.botonPrimario, styles.publicar, guardando && { opacity: 0.6 }]} onPress={guardar} disabled={guardando}>
+        <Text style={estilosBase.botonPrimarioTexto}>
+          {guardando ? "Guardando..." : editando ? "Guardar cambios" : "Publicar Evento"}
+        </Text>
       </Pressable>
+
+      {editando && (
+        <Pressable style={styles.eliminar} onPress={eliminar} disabled={eliminando}>
+          <Ionicons name="trash-outline" size={16} color={colores.error} />
+          <Text style={styles.eliminarTexto}>{eliminando ? "Eliminando..." : "Eliminar evento"}</Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  ayuda: { color: colores.textoSuave, fontSize: 12, marginTop: 6 },
+  eliminar: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 22 },
+  eliminarTexto: { color: colores.error, fontWeight: "700" },
   portadaConImagen: { padding: 0, overflow: "hidden", borderStyle: "solid" },
   portadaImagen: { width: "100%", aspectRatio: 16 / 9 },
   portadaAcciones: { position: "absolute", right: 10, bottom: 10, flexDirection: "row", gap: 8 },

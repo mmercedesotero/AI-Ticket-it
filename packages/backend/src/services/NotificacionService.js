@@ -11,7 +11,7 @@ class NotificacionService {
     this.compraRepository = compraRepository;
   }
 
-  crear(rol, destinatarioId, { tipo, titulo, mensaje, clave = null }) {
+  crear(rol, destinatarioId, { tipo, titulo, mensaje, clave = null, compraId = null }) {
     // Si ya existe un aviso con la misma clave no se vuelve a crear.
     if (clave) {
       const repetida = this.notificacionRepository
@@ -21,12 +21,44 @@ class NotificacionService {
     }
 
     return this.notificacionRepository.save(
-      new Notificacion(undefined, rol, destinatarioId, tipo, titulo, mensaje, clave)
+      new Notificacion(undefined, rol, destinatarioId, tipo, titulo, mensaje, clave, compraId)
     );
   }
 
   // Recordatorios para el comprador: avisa el día anterior y el mismo día de cada evento con entrada confirmada.
   // Se calculan al consultar las notificaciones, así no hace falta un proceso que corra por tiempo.
+  // Aviso de mensaje nuevo en un chat. Si ya hay uno sin leer de ese mismo chat se actualiza en vez de
+  // crear otro, para no llenar la lista cuando alguien escribe varias veces seguidas.
+  avisarMensaje(rolDestino, destinatarioId, { compraId, remitente, evento, texto }) {
+    const resumen = texto.length > 70 ? `${texto.slice(0, 70)}…` : texto;
+    const datos = {
+      tipo: "NUEVO_MENSAJE",
+      titulo: `Nuevo mensaje de ${remitente}`,
+      mensaje: `Te escribió por ${evento}: "${resumen}"`,
+      compraId,
+    };
+
+    const sinLeer = this.notificacionRepository
+      .findByDestinatario(rolDestino, destinatarioId)
+      .find((n) => n.tipo === "NUEVO_MENSAJE" && n.compraId === compraId && !n.leida);
+
+    if (sinLeer) {
+      Object.assign(sinLeer, datos, { fechaHora: new Date() });
+      return sinLeer;
+    }
+    return this.crear(rolDestino, destinatarioId, datos);
+  }
+
+  // Al abrir un chat se marcan como leídos sus avisos.
+  marcarMensajesLeidos(rol, destinatarioId, compraId) {
+    this.notificacionRepository
+      .findByDestinatario(rol, destinatarioId)
+      .filter((n) => n.tipo === "NUEVO_MENSAJE" && n.compraId === compraId)
+      .forEach((n) => {
+        n.leida = true;
+      });
+  }
+
   // Avisos para el organizador sobre sus eventos: mañana, hoy, pocas entradas y sin ventas.
   // Igual que los del comprador, se calculan al consultar y no se repiten (cada uno tiene su clave).
   generarAvisosOrganizador(organizador) {

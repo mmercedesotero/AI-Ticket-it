@@ -1,5 +1,6 @@
 import { useRefrescar } from "../refrescar";
 import CabeceraPantalla from "../componentes/CabeceraPantalla";
+import BotonMensajes from "../componentes/BotonMensajes";
 import Chip from "../componentes/Chip";
 import Segmentos from "../componentes/Segmentos";
 import { POCAS_ENTRADAS } from "../componentes/TarjetaEvento";
@@ -106,7 +107,7 @@ export default function OrganizadorScreen({ navigation }) {
 
   return (
     <View style={styles.fondo}>
-      <CabeceraPantalla titulo="Panel organizador" subtitulo={organizador.nombre} />
+      <CabeceraPantalla titulo="Panel organizador" subtitulo={organizador.nombre} derecha={<BotonMensajes />} />
       {indicador}
       <ScrollView
         style={styles.fondo}
@@ -252,7 +253,12 @@ function TarjetaEvento({ datos, navigation }) {
           {agotado && <Text style={[styles.estado, styles.estadoOscuro]}>Agotado</Text>}
           {agotandose && <Text style={[styles.estado, styles.estadoFuerte]}>Agotándose</Text>}
         </View>
-        <Chip etiqueta="Gestionar" icono="options-outline" onPress={() => navigation.navigate("ComprasEvento", { id: evento.id })} />
+        <View style={styles.acciones}>
+          {!finalizado && (
+            <Chip etiqueta="Editar" icono="create-outline" onPress={() => navigation.navigate("CrearEvento", { eventoId: evento.id })} />
+          )}
+          <Chip etiqueta="Gestionar" icono="options-outline" onPress={() => navigation.navigate("ComprasEvento", { id: evento.id })} />
+        </View>
       </View>
     </Pressable>
   );
@@ -313,6 +319,7 @@ const styles = StyleSheet.create({
   pct: { fontSize: 12, fontWeight: "700", color: colores.indigo, marginTop: 8 },
 
   tarjetaPie: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, gap: 8 },
+  acciones: { flexDirection: "row", gap: 6 },
   etiquetas: { flexDirection: "row", flexWrap: "wrap", gap: 6, flex: 1 },
   estado: {
     color: CORAL_OSCURO, backgroundColor: "rgba(239,128,108,0.12)", fontSize: 11, fontWeight: "700",

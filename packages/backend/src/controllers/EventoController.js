@@ -45,23 +45,11 @@ class EventoController {
   }
 
   actualizar(req, res) {
-    const evento = this.eventoService.actualizar(req.params.id, req.body);
-
-    if (!evento) {
-      return res.status(404).json({ error: "Evento no encontrado" });
-    }
-
-    res.json(evento);
+    res.json(this.eventoService.actualizar(req.params.id, req.body, req.organizador.id));
   }
 
   eliminar(req, res) {
-    const eliminado = this.eventoService.eliminar(req.params.id);
-
-    if (!eliminado) {
-      return res.status(404).json({ error: "Evento no encontrado" });
-    }
-
-    res.status(204).end();
+    res.json(this.eventoService.eliminar(req.params.id, req.organizador.id));
   }
 }
 

@@ -352,6 +352,32 @@ function cargarDatos() {
     ["O", "Hola, sí, hay guardarropas sin costo en el hall de entrada."],
   ]);
 
+  // Más conversaciones, con horarios distintos (hace un rato, ayer, hace unos días).
+  const compraLucia = comprar(lucia, e.monologos, 1, 1, CONFIRMADA);
+  const compraMateo = comprar(mateo, e.electro, 2, 1, CONFIRMADA);
+  const compraSantiago = comprar(santiago, e.tributo, 1, 2, CONFIRMADA);
+  chatear(compraLucia, lucia, comediaClub, [
+    ["C", "Hola, ¿se puede ir con menores de edad?"],
+    ["O", "¡Hola Lucía! Es apto para mayores de 16. Con acompañante pueden entrar desde los 14."],
+    ["C", "Perfecto, gracias."],
+  ]);
+  chatear(compraMateo, mateo, ruidoBlanco, [
+    ["C", "Buenas, ¿el ingreso al festival es por la puerta principal?"],
+    ["O", "Hola Mateo, sí. Las puertas abren a las 16 hs. Llevá tu entrada con el QR desde la app."],
+  ]);
+  chatear(compraSantiago, santiago, ruidoBlanco, [
+    ["C", "¿Hay estacionamiento cerca del lugar?"],
+  ]);
+
+  // Ana ya leyó la charla del Stand-Up y la de Tango; el resto queda sin leer para mostrar la diferencia.
+  const horas = (h) => new Date(Date.now() - h * 60 * 60 * 1000);
+  [[compraStandUp, 30], [compraTango, 5], [compraLucia, 26], [compraMateo, 3], [compraSantiago, 1]].forEach(([compra, h]) => {
+    compra.mensajes.forEach((m, i) => {
+      m.fechaHora = horas(h - i * 0.1);
+    });
+  });
+  compraStandUp.lecturas.COMPRADOR = compraStandUp.mensajes.at(-1).id;
+
   // Todos los eventos "ya realizados" se mueven al pasado ahora que ya tienen sus compras.
   pasados.forEach(([evento, dias]) => {
     evento.fecha = fechaEn(dias);
@@ -379,6 +405,14 @@ function cargarDatos() {
     if (lista[i].tipo !== "RESENIA" && nombresPasados.some((nombre) => lista[i].mensaje.includes(nombre))) lista.splice(i, 1);
   }
   lista.forEach((n, i) => {
+    // Los avisos de mensajes siguen el horario y el estado de lectura de su chat.
+    if (n.tipo === "NUEVO_MENSAJE") {
+      const compra = compraRepository.findById(n.compraId);
+      const ultimo = compra.mensajes.at(-1);
+      n.fechaHora = ultimo.fechaHora;
+      n.leida = (compra.lecturas[n.rol] ?? 0) >= ultimo.id;
+      return;
+    }
     const dias = (i * 7) % 13; // 0 a 12 días atrás, bien repartido
     const horas = (i * 5) % 20;
     n.fechaHora = new Date(Date.now() - (dias * 24 + horas) * 60 * 60 * 1000);

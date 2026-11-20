@@ -5,8 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
 import { ESTADOS, estiloEstado } from "../compras";
+import Chip from "../componentes/Chip";
 import { colores, radios } from "../tema";
-import { formatearPrecio } from "../formato";
+import { formatearPrecio, yaSeRealizo } from "../formato";
 
 const sumar = (lista, campo) => lista.reduce((total, x) => total + x[campo], 0);
 
@@ -43,7 +44,12 @@ export default function ComprasEventoScreen({ route, navigation }) {
     <View style={styles.fondo}>
     {indicador}
     <ScrollView style={styles.fondo} contentContainerStyle={styles.contenedor} showsVerticalScrollIndicator={false} {...refreshProps}>
-      <Text style={styles.titulo}>{datos.evento.nombre}</Text>
+      <View style={styles.tituloFila}>
+        <Text style={[styles.titulo, { flex: 1 }]}>{datos.evento.nombre}</Text>
+        {datos.evento.fecha && !yaSeRealizo(datos.evento.fecha) && (
+          <Chip etiqueta="Editar" icono="create-outline" onPress={() => navigation.navigate("CrearEvento", { eventoId: id })} />
+        )}
+      </View>
 
       <View style={styles.resumen}>
         <View style={styles.resumenFila}>
@@ -108,6 +114,7 @@ export default function ComprasEventoScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  tituloFila: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   fondo: { flex: 1, backgroundColor: colores.fondo },
   contenedor: { padding: 16, paddingBottom: 40 },
   centro: { marginTop: 100, textAlign: "center" },
