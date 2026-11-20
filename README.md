@@ -380,6 +380,7 @@ Todos los colores y medidas están en un solo archivo, [`packages/frontend/src/t
 - Botones chicos y translúcidos en coral para filtros y acciones secundarias; botón coral sólido para la acción principal.
 - Los avisos y confirmaciones aparecen como hojas desde abajo, en lugar de las alertas del sistema.
 - Títulos centrados y una animación de "tirar para refrescar" igual en todas las pantallas.
+- Al tocar otra vez el ícono de la pestaña en la que ya estás, la lista vuelve al principio (como en las apps de iPhone).
 
 ---
 
