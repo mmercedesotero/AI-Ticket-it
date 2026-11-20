@@ -8,12 +8,16 @@ function hashPassword(password) {
 }
 
 function verificarPassword(password, guardado) {
-  if (!guardado) return false;
+  if (typeof guardado !== "string") return false;
 
   const [salt, hash] = guardado.split(":");
-  const intento = crypto.scryptSync(password, salt, 64);
+  // Si el dato guardado no tiene el formato "salt:hash" no se puede verificar: es una contraseña incorrecta.
+  if (!salt || !hash) return false;
 
-  return crypto.timingSafeEqual(intento, Buffer.from(hash, "hex"));
+  const intento = crypto.scryptSync(password, salt, 64);
+  const esperado = Buffer.from(hash, "hex");
+
+  return esperado.length === intento.length && crypto.timingSafeEqual(intento, esperado);
 }
 
 module.exports = { hashPassword, verificarPassword };

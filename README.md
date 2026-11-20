@@ -69,6 +69,7 @@ La aplicación se ejecuta de forma local: el **backend** corre en la computadora
 | Capa | Tecnología |
 |------|-----------|
 | Back-End | Node.js + Express 5 |
+| Tests | Ejecutor de tests de Node (`node:test`) y `fetch`, sin librerías extra |
 | Autenticación | JWT (`jsonwebtoken`) y contraseñas con hash `scrypt` (módulo `crypto` de Node) |
 | Front-End | React Native con Expo (SDK 58) |
 | Navegación | React Navigation (stack + tabs inferiores) |
@@ -91,6 +92,7 @@ AI-Ticket-It/
     ├── backend/                 API REST (Node + Express)
     │   ├── package.json
     │   ├── server.js            arranca el servidor (puerto 3000) y carga los datos de prueba
+    │   ├── tests/               tests automáticos del backend (ver "Correr los tests")
     │   └── src/
     │       ├── app.js           configura Express y monta las rutas
     │       ├── container.js     repositorios y servicios compartidos
@@ -166,6 +168,30 @@ npx expo start -c
 ```
 
 El `-c` limpia el caché, conviene usarlo la primera vez o cuando algo se vea raro. Aparece un código QR en la terminal: escanealo con **Expo Go** (en Android) o con la cámara (en iPhone).
+
+### Correr los tests del backend
+
+Los tests levantan el servidor real en un puerto libre, con los datos de prueba, y prueban la API de punta a punta. No necesitan instalar nada extra (usan el ejecutor de tests que trae Node) ni tener el servidor corriendo.
+
+```bash
+cd packages/backend
+npm test
+```
+
+Son más de 200 tests y tardan unos 20 segundos. Cubren:
+
+| Archivo | Qué prueba |
+|---------|-----------|
+| `auth.test.js` | Registro, login, sesión por token, editar perfil, cambiar y recuperar la contraseña, eliminar la cuenta y fotos de perfil. |
+| `eventos.test.js` | Búsqueda y filtros, crear, portada, editar y eliminar eventos, con los permisos de cada rol. |
+| `compras.test.js` | Comprar (cupos y validaciones), pagar (incluido el rechazo con `0000`), cancelar y reembolsar, y las reservas que vencen. |
+| `tarjetas-favoritos.test.js` | Validaciones de tarjetas, duplicadas y máximo de 5; favoritos. |
+| `resenias.test.js` | Quién puede puntuar, límites del puntaje y promedio del organizador. |
+| `notificaciones.test.js` | Avisos, marcar como leídos y recordatorios de comprador y organizador. |
+| `mensajes.test.js` | Chat entre comprador y organizador, avisos, bandeja y mensajes sin leer. |
+| `unitarios.test.js` | Modelos y utilidades: contraseñas, tokens, imágenes, estados de compra y qué datos salen en las respuestas. |
+
+Para correr un solo archivo: `node --test tests/compras.test.js`.
 
 ### Si algo no anda
 
