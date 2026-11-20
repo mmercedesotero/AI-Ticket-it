@@ -93,6 +93,7 @@ AI-Ticket-It/
     │   ├── package.json
     │   ├── server.js            arranca el servidor (puerto 3000) y carga los datos de prueba
     │   ├── tests/               tests automáticos del backend (ver "Correr los tests")
+    │   ├── postman/             colección de Postman con todos los endpoints (ver "Probar la API con Postman")
     │   └── src/
     │       ├── app.js           configura Express y monta las rutas
     │       ├── container.js     repositorios y servicios compartidos
@@ -192,6 +193,36 @@ Son más de 200 tests y tardan unos 20 segundos. Cubren:
 | `unitarios.test.js` | Modelos y utilidades: contraseñas, tokens, imágenes, estados de compra y qué datos salen en las respuestas. |
 
 Para correr un solo archivo: `node --test tests/compras.test.js`.
+
+### Probar la API con Postman
+
+En [`packages/backend/postman/`](packages/backend/postman) está la colección **AI-Ticket-It.postman_collection.json** (111 pedidos) y un entorno local, **AI-Ticket-It.postman_environment.json**.
+
+1. Levantar el backend (`npm start` en `packages/backend`): queda en `http://localhost:3000`.
+2. En Postman: **Import** y elegir los dos archivos (el entorno es opcional: la colección ya trae `baseUrl`).
+3. Para correr todo de una vez: clic derecho en la colección → **Run collection**. Los pedidos están en orden y cada uno guarda lo que necesita el siguiente (tokens, ids) en variables, así que no hay que copiar nada a mano.
+
+Cada pedido tiene tests de Postman (estado de la respuesta, forma de los datos y mensajes de error): en la ejecución completa hay unas 170 verificaciones. También se puede correr desde la terminal con [Newman](https://www.npmjs.com/package/newman):
+
+```bash
+npx newman run packages/backend/postman/AI-Ticket-It.postman_collection.json
+```
+
+| Carpeta | Qué recorre |
+|---------|-------------|
+| 1. Autenticación y perfil | Registro, login, token, editar perfil con foto, cambiar y recuperar la contraseña. |
+| 2. Categorías y eventos | Listar, buscar, filtrar, ordenar, crear (con y sin portada), editar. |
+| 3. Favoritos | Agregar, listar y quitar. |
+| 4. Tarjetas | Guardar (incluida la que se rechaza, terminada en `0000`), validaciones y listar. |
+| 5. Compras y pagos | Comprar, reservar, pagar, pago rechazado, ventas del organizador y cancelaciones. |
+| 6. Mensajes (chat) | Escribir, responder, leer y bandeja de chats de cada lado. |
+| 7. Notificaciones | Listar, marcar como leídas y el aviso de mensaje nuevo. |
+| 8. Reseñas | Puntuar con una entrada utilizada y ver el puntaje del organizador. |
+| 9. Fotos de perfil | Pedir la foto guardada. |
+| 10. Cancelar, eliminar y limpiar | Reembolso, eliminar el evento y las cuentas que creó la colección. |
+| 11. Usuarios y organizadores | Administración básica (sin sesión). |
+
+**Para tener en cuenta:** la carpeta de Reseñas usa las cuentas de prueba (`ana@mail.com`, `live@mail.com`) y la compra utilizada de Ana, que existe solo con el servidor recién iniciado. Si se corre la colección varias veces seguidas contra el mismo servidor, esa reseña pasa a responder "Ya puntuaste este evento" y el test lo contempla.
 
 ### Si algo no anda
 

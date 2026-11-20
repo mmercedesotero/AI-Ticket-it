@@ -4,11 +4,11 @@ import BotonMensajes from "../componentes/BotonMensajes";
 import Chip from "../componentes/Chip";
 import Segmentos from "../componentes/Segmentos";
 import { POCAS_ENTRADAS } from "../componentes/TarjetaEvento";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useScrollToTop } from "@react-navigation/native";
 import { get } from "../api";
 import { useSesion } from "../sesion";
 import { colores, radios } from "../tema";
@@ -36,6 +36,8 @@ const FILTROS = [
 
 export default function OrganizadorScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const lista = useRef(null);
+  useScrollToTop(lista);
   const { sesion } = useSesion();
   const organizador = sesion.usuario;
   const [eventos, setEventos] = useState([]);
@@ -110,6 +112,7 @@ export default function OrganizadorScreen({ navigation }) {
       <CabeceraPantalla titulo="Panel organizador" subtitulo={organizador.nombre} derecha={<BotonMensajes />} />
       {indicador}
       <ScrollView
+        ref={lista}
         style={styles.fondo}
         contentContainerStyle={[styles.contenedor, { paddingTop: 18, paddingBottom: 100 + insets.bottom }]}
         showsVerticalScrollIndicator={false}

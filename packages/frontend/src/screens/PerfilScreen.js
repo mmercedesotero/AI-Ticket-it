@@ -2,13 +2,13 @@ import { useRefrescar } from "../refrescar";
 import Avatar from "../componentes/Avatar";
 import CabeceraPantalla from "../componentes/CabeceraPantalla";
 import { alerta } from "../dialogo";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Pressable, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useScrollToTop } from "@react-navigation/native";
 import { get } from "../api";
 import { useSesion } from "../sesion";
 import { colores, radios } from "../tema";
@@ -23,6 +23,8 @@ const OPCIONES = [
 
 export default function PerfilScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const lista = useRef(null);
+  useScrollToTop(lista);
   const { sesion, cerrarSesion } = useSesion();
   const { usuario, rol } = sesion;
   const esOrganizador = rol === "ORGANIZADOR";
@@ -80,6 +82,7 @@ export default function PerfilScreen({ navigation }) {
     <CabeceraPantalla titulo="Mi perfil" />
     {indicador}
     <ScrollView
+      ref={lista}
       style={styles.fondo}
       contentContainerStyle={[styles.contenedor, { paddingTop: 18 }]}
       showsVerticalScrollIndicator={false}

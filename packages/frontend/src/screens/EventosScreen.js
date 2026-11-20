@@ -1,5 +1,6 @@
 import { useRefrescar } from "../refrescar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useScrollToTop } from "@react-navigation/native";
 import {
   ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet,
   Text, TextInput, useWindowDimensions, View,
@@ -29,6 +30,8 @@ const SEPARACION = 12;
 
 export default function EventosScreen({ navigation }) {
   const { sesion } = useSesion();
+  const lista = useRef(null);
+  useScrollToTop(lista);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   // Los eventos, categorías y favoritos vienen del almacén global (se piden una sola vez).
@@ -193,6 +196,7 @@ export default function EventosScreen({ navigation }) {
       {encabezado}
       {indicador}
       <FlatList
+        ref={lista}
         data={eventos}
         {...refreshProps}
         keyExtractor={(evento) => String(evento.id)}

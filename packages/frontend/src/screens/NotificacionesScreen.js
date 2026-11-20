@@ -1,8 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { SectionList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useScrollToTop } from "@react-navigation/native";
 import { useNotificaciones } from "../notificaciones";
 import { useRefrescar } from "../refrescar";
 import { useSesion } from "../sesion";
@@ -85,6 +85,8 @@ function agrupar(lista) {
 
 export default function NotificacionesScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const lista = useRef(null);
+  useScrollToTop(lista);
   const { sesion } = useSesion();
   const esOrganizador = sesion.rol === "ORGANIZADOR";
   const { notificaciones, noLeidas, recargar, marcarLeida, marcarTodasLeidas } = useNotificaciones();
@@ -121,6 +123,7 @@ export default function NotificacionesScreen({ navigation }) {
       {indicador}
 
       <SectionList
+        ref={lista}
         sections={agrupar(visibles)}
         keyExtractor={(n) => String(n.id)}
         {...refreshProps}

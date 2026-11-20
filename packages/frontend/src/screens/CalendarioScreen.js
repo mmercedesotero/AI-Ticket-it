@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useScrollToTop } from "@react-navigation/native";
 import { get } from "../api";
 import { useEventos } from "../eventos";
 import { useSesion } from "../sesion";
@@ -26,6 +26,8 @@ const clave = (anio, mes, dia) => `${anio}-${String(mes + 1).padStart(2, "0")}-$
 // El comprador ve sus entradas y sus favoritos; el organizador ve sus eventos.
 export default function CalendarioScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const listaRef = useRef(null);
+  useScrollToTop(listaRef);
   const { sesion } = useSesion();
   const { eventos, favoritos, recargar } = useEventos();
   const esOrganizador = sesion.rol === "ORGANIZADOR";
@@ -125,6 +127,7 @@ export default function CalendarioScreen({ navigation }) {
       <CabeceraPantalla titulo="Calendario" />
       {indicador}
       <ScrollView
+        ref={listaRef}
         contentContainerStyle={[styles.contenedor, { paddingBottom: 24 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         {...refreshProps}
