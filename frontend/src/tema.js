@@ -2,14 +2,14 @@
 // Para cambiar el look de toda la app alcanza con tocar los valores de acá.
 export const colores = {
   indigo: "#0F172A", // encabezados, navegación, textos fuertes
-  acento: "#16A34A", // botones principales y detalles (verde, como el logo)
-  acentoSuave: "#ECFDF3", // fondo de elementos destacados
-  fondo: "#F8FAFC", // fondo de las pantallas
+  acento: "#EF806C", // botones principales y detalles (coral)
+  acentoSuave: "#FDEEEA", // fondo de elementos destacados
+  fondo: "#E9EEF5", // fondo de las pantallas (un poco más oscuro que las tarjetas blancas, para que se note su forma)
   blanco: "#FFFFFF", // tarjetas y campos
   borde: "#E2E8F0",
   textoSuave: "#64748B",
   textoPlaceholder: "#94A3B8",
-  exito: "#16A34A",
+  exito: "#148C5E", // verde para confirmaciones
   error: "#DC2626",
 };
 

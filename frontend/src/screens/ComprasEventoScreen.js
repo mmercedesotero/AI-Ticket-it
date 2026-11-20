@@ -1,9 +1,10 @@
+import { useRefrescar } from "../refrescar";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
-import { ESTADOS } from "../compras";
+import { ESTADOS, estiloEstado } from "../compras";
 import { colores, radios } from "../tema";
 import { formatearPrecio } from "../formato";
 
@@ -15,12 +16,16 @@ export default function ComprasEventoScreen({ route, navigation }) {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
 
+  const cargar = useCallback(
+    () => get(`/compras?eventoId=${id}`).then(setDatos).catch((e) => setError(e.message)),
+    [id]
+  );
+  const { control } = useRefrescar(cargar);
+
   useFocusEffect(
     useCallback(() => {
-      get(`/compras?eventoId=${id}`)
-        .then(setDatos)
-        .catch((e) => setError(e.message));
-    }, [id])
+      cargar();
+    }, [cargar])
   );
 
   if (error) return <Text style={styles.centro}>Error: {error}</Text>;
@@ -35,7 +40,7 @@ export default function ComprasEventoScreen({ route, navigation }) {
   const ingresos = sumar(pagadas, "total");
 
   return (
-    <ScrollView style={styles.fondo} contentContainerStyle={styles.contenedor} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.fondo} contentContainerStyle={styles.contenedor} showsVerticalScrollIndicator={false} refreshControl={control}>
       <Text style={styles.titulo}>{datos.evento.nombre}</Text>
 
       <View style={styles.resumen}>
@@ -81,8 +86,8 @@ export default function ComprasEventoScreen({ route, navigation }) {
               <Text style={styles.detalle}>
                 {compra.cantidad} × {compra.tipoEntrada} · {formatearPrecio(compra.total)}
               </Text>
-              <View style={[styles.estado, { backgroundColor: estado.color }]}>
-                <Text style={styles.estadoTexto}>{estado.texto}</Text>
+              <View style={[styles.estado, estiloEstado(estado).etiqueta]}>
+                <Text style={[styles.estadoTexto, estiloEstado(estado).texto]}>{estado.texto}</Text>
               </View>
             </View>
             <Pressable

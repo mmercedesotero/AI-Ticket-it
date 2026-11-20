@@ -22,12 +22,12 @@ export function LogoIcono({ ancho = 40, color = colores.acento }) {
 }
 
 // Logo completo: ícono + "Ticket It" (con "It" en el color de acento).
-export default function Logo({ tamano = 22 }) {
+export default function Logo({ tamano = 22, claro = false }) {
   return (
     <View style={styles.fila}>
       <LogoIcono ancho={tamano * 1.6} />
-      <Text style={[styles.texto, { fontSize: tamano }]}>
-        Ticket <Text style={styles.it}>It</Text>
+      <Text style={[styles.texto, { fontSize: tamano }, claro && { color: colores.blanco }]}>
+        Ticket-<Text style={styles.it}>It</Text>
       </Text>
     </View>
   );

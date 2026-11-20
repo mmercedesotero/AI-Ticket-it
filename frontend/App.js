@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -9,11 +10,14 @@ import { EventosProvider } from "./src/eventos";
 import { NotificacionesProvider, useNotificaciones } from "./src/notificaciones";
 import NotificacionesScreen from "./src/screens/NotificacionesScreen";
 import CalendarioScreen from "./src/screens/CalendarioScreen";
+import EditarPerfilScreen from "./src/screens/EditarPerfilScreen";
 import DialogoRaiz from "./src/componentes/DialogoRaiz";
 import { colores } from "./src/tema";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegistroScreen from "./src/screens/RegistroScreen";
 import RecuperarScreen from "./src/screens/RecuperarScreen";
+import TerminosScreen from "./src/screens/TerminosScreen";
+import AyudaScreen from "./src/screens/AyudaScreen";
 import PerfilScreen from "./src/screens/PerfilScreen";
 import EventosScreen from "./src/screens/EventosScreen";
 import EventoDetalleScreen from "./src/screens/EventoDetalleScreen";
@@ -43,17 +47,20 @@ const ICONOS_TAB = {
   Perfil: ["person", "person-outline"],
 };
 
-const opcionesTab = ({ route }) => ({
+const opcionesTab = ({ route }, insets) => ({
   headerShown: false,
   tabBarActiveTintColor: colores.acento,
   tabBarInactiveTintColor: colores.textoSuave,
+  tabBarStyle: { backgroundColor: colores.blanco, borderTopWidth: 1, borderTopColor: colores.borde, height: 54 + insets.bottom, paddingTop: 8, paddingBottom: insets.bottom + 4 },
+  tabBarShowLabel: false,
   tabBarIcon: ({ focused, color, size }) => (
-    <Ionicons name={ICONOS_TAB[route.name][focused ? 0 : 1]} size={size} color={color} />
+    <Ionicons name={ICONOS_TAB[route.name][focused ? 0 : 1]} size={26} color={color} />
   ),
 });
 
 // Cada rol ve una app distinta: el comprador explora y compra, el organizador gestiona sus eventos.
 function Inicio() {
+  const insets = useSafeAreaInsets();
   const { sesion } = useSesion();
   const { noLeidas } = useNotificaciones();
 
@@ -65,7 +72,7 @@ function Inicio() {
 
   if (sesion.rol === "ORGANIZADOR") {
     return (
-      <Tab.Navigator screenOptions={opcionesTab}>
+      <Tab.Navigator screenOptions={(p) => opcionesTab(p, insets)}>
         <Tab.Screen name="Mis eventos" component={OrganizadorScreen} />
         <Tab.Screen name="Calendario" component={CalendarioScreen} />
         <Tab.Screen name="Notificaciones" component={NotificacionesScreen} options={opcionesNotificaciones} />
@@ -75,7 +82,7 @@ function Inicio() {
   }
 
   return (
-    <Tab.Navigator screenOptions={opcionesTab}>
+    <Tab.Navigator screenOptions={(p) => opcionesTab(p, insets)}>
       <Tab.Screen name="Eventos" component={EventosScreen} />
       <Tab.Screen name="Mis compras" component={MisComprasScreen} />
       <Tab.Screen name="Calendario" component={CalendarioScreen} />
@@ -101,19 +108,24 @@ export default function App() {
     setSesion({ rol, usuario });
   };
 
+  // Después de editar el perfil, la sesión guarda los datos nuevos (nombre, foto, etc.).
+  const actualizarUsuario = (usuario) => setSesion((actual) => ({ ...actual, usuario }));
+
   const cerrarSesion = () => {
     setToken(null);
     setSesion(null);
   };
 
   return (
-    <SesionContext.Provider value={{ sesion, iniciarSesion, cerrarSesion }}>
+    <SafeAreaProvider>
+    <SesionContext.Provider value={{ sesion, iniciarSesion, actualizarUsuario, cerrarSesion }}>
       <NavigationContainer>
         {sesion === null ? (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Registro" component={RegistroScreen} />
             <Stack.Screen name="Recuperar" component={RecuperarScreen} />
+            <Stack.Screen name="Terminos" component={TerminosScreen} options={{ ...opcionesStack, headerShown: true, title: "Términos y Condiciones" }} />
           </Stack.Navigator>
         ) : (
           <EventosProvider esComprador={sesion.rol === "COMPRADOR"}>
@@ -128,6 +140,9 @@ export default function App() {
             <Stack.Screen name="CrearEvento" component={CrearEventoScreen} options={{ title: "Crear Evento" }} />
             <Stack.Screen name="Favoritos" component={FavoritosScreen} options={{ title: "Mis favoritos" }} />
             <Stack.Screen name="Entrada" component={EntradaScreen} options={{ title: "Mi entrada" }} />
+            <Stack.Screen name="Terminos" component={TerminosScreen} options={{ title: "Términos y Condiciones" }} />
+            <Stack.Screen name="Ayuda" component={AyudaScreen} options={{ title: "Ayuda y Soporte" }} />
+            <Stack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: "Editar perfil" }} />
             <Stack.Screen name="Tarjetas" component={TarjetasScreen} options={{ title: "Métodos de pago" }} />
             <Stack.Screen name="AgregarTarjeta" component={AgregarTarjetaScreen} options={{ title: "Agregar tarjeta" }} />
             <Stack.Screen name="Pagar" component={PagarScreen} options={{ title: "Pagar" }} />
@@ -138,5 +153,6 @@ export default function App() {
       </NavigationContainer>
       <DialogoRaiz />
     </SesionContext.Provider>
+    </SafeAreaProvider>
   );
 }

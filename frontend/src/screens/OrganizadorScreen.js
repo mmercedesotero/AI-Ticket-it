@@ -1,3 +1,4 @@
+import CabeceraPantalla from "../componentes/CabeceraPantalla";
 import { useCallback, useState } from "react";
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -76,14 +77,14 @@ export default function OrganizadorScreen({ navigation }) {
   const finalizados = eventos.filter((e) => yaSeRealizo(e.evento.fecha));
 
   return (
+    <View style={styles.fondo}>
+    <CabeceraPantalla titulo="Panel organizador" subtitulo={organizador.nombre} />
     <ScrollView
       style={styles.fondo}
-      contentContainerStyle={[styles.contenedor, { paddingTop: insets.top + 8 }]}
+      contentContainerStyle={[styles.contenedor, { paddingTop: 18 }]}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refrescando} onRefresh={refrescar} />}
     >
-      <Text style={styles.titulo}>Panel Organizador</Text>
-      <Text style={styles.subtitulo}>{organizador.nombre}</Text>
 
       {error && <Text style={styles.error}>Error: {error}</Text>}
 
@@ -136,6 +137,7 @@ export default function OrganizadorScreen({ navigation }) {
         </>
       )}
     </ScrollView>
+    </View>
   );
 }
 

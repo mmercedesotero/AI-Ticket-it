@@ -7,6 +7,7 @@ const IMAGENES = {
   "Lollapalooza": require("../img/lollapalooza.jpeg"),
   "Noche de Rock": require("../img/NochedeRock.jpeg"),
   "Cosquin Rock 2025": require("../img/cosquin rock.jpeg"),
+  "Stand-Up Comedy": require("../img/images.jpeg"),
 };
 
 // Si el evento no tiene foto (por ejemplo uno recién creado), devuelve null.

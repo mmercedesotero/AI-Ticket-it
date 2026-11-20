@@ -9,6 +9,8 @@ import { enviar, get } from "../api";
 import { useEventos } from "../eventos";
 import { descargarComprobante } from "../comprobante";
 import { pagarCompras } from "../pago";
+import { HORAS_RESERVA } from "../compras";
+import ConfirmarCompraModal from "../componentes/ConfirmarCompraModal";
 import PagoModal from "../componentes/PagoModal";
 import SelectorTarjeta from "../componentes/SelectorTarjeta";
 import { iconoDe } from "../componentes/TarjetaEvento";
@@ -24,6 +26,8 @@ export default function SeleccionarEntradasScreen({ route, navigation }) {
   const [evento, setEvento] = useState(() => eventos.find((e) => e.id === id) ?? null);
   const [cantidades, setCantidades] = useState({});
   const [tarjetaId, setTarjetaId] = useState(null);
+  const [confirmando, setConfirmando] = useState(false);
+  const [reservando, setReservando] = useState(false);
   const [estadoPago, setEstadoPago] = useState(null);
   const [mensajePago, setMensajePago] = useState("");
   const [error, setError] = useState(null);
@@ -56,21 +60,44 @@ export default function SeleccionarEntradasScreen({ route, navigation }) {
       return { ...actuales, [tipo.id]: nueva };
     });
 
-  // Crea una compra por cada tipo elegido (el backend compra un tipo por vez) y después las paga con la tarjeta.
+  // Crea una compra por cada tipo elegido (el backend compra un tipo por vez). Quedan "pendientes de pago".
+  const crearCompras = async () => {
+    for (const e of elegidas) {
+      const clave = `${e.tipo.id}x${e.cantidad}`;
+      if (creadas.current.has(clave)) continue;
+
+      const compra = await enviar("POST", "/compras", {
+        eventoId: evento.id,
+        entradaId: e.tipo.id,
+        cantidad: e.cantidad,
+      });
+      creadas.current.set(clave, compra.id);
+    }
+  };
+
+  // Reserva las entradas sin pagar: quedan apartadas por un tiempo y se pagan desde Mis compras.
+  const reservar = async () => {
+    if (reservando) return;
+    setReservando(true);
+    try {
+      await crearCompras();
+      alerta(
+        "¡Entradas reservadas!",
+        `Te las guardamos por ${HORAS_RESERVA} horas. Pagalas desde Mis compras antes de que venza la reserva: si no, se cancelan solas y vuelven a estar disponibles.`,
+        [{ text: "Ver mis compras", onPress: () => navigation.navigate("Inicio", { screen: "Mis compras" }) }]
+      );
+    } catch (e) {
+      alerta("No se pudo reservar", e.message);
+    } finally {
+      setReservando(false);
+    }
+  };
+
+  // Crea las compras y después las paga con la tarjeta.
   const ejecutarPago = async () => {
     setEstadoPago("procesando");
     try {
-      for (const e of elegidas) {
-        const clave = `${e.tipo.id}x${e.cantidad}`;
-        if (creadas.current.has(clave)) continue;
-
-        const compra = await enviar("POST", "/compras", {
-          eventoId: evento.id,
-          entradaId: e.tipo.id,
-          cantidad: e.cantidad,
-        });
-        creadas.current.set(clave, compra.id);
-      }
+      await crearCompras();
 
       const porPagar = elegidas
         .map((e) => creadas.current.get(`${e.tipo.id}x${e.cantidad}`))
@@ -97,18 +124,14 @@ export default function SeleccionarEntradasScreen({ route, navigation }) {
       return;
     }
 
-    const resumen = elegidas.map((e) => `${e.cantidad} × ${e.tipo.nombre}`).join("\n");
-    alerta("Confirmar pago", `${resumen}\n\nTotal: ${formatearPrecio(total)}`, [
-      { text: "No", style: "cancel" },
-      { text: "Sí, pagar", onPress: ejecutarPago },
-    ]);
+    setConfirmando(true);
   };
 
   const sinElegir = total === 0 || finalizado;
 
   return (
     <View style={styles.fondo}>
-      <ScrollView contentContainerStyle={[styles.contenedor, { paddingBottom: 120 + insets.bottom }]}>
+      <ScrollView contentContainerStyle={[styles.contenedor, { paddingBottom: 150 + insets.bottom }]}>
         <View style={styles.resumen}>
           <View style={styles.miniatura}>
             {foto ? (
@@ -197,7 +220,25 @@ export default function SeleccionarEntradasScreen({ route, navigation }) {
             {finalizado ? "No disponible a la venta" : `Pagar ${formatearPrecio(total)}`}
           </Text>
         </Pressable>
+        {!sinElegir && (
+          <Pressable style={styles.reservar} onPress={reservar} disabled={reservando}>
+            <Text style={styles.reservarTexto}>{reservando ? "Reservando..." : "Reservar sin pagar"}</Text>
+          </Pressable>
+        )}
       </View>
+
+      <ConfirmarCompraModal
+        visible={confirmando}
+        evento={evento}
+        elegidas={elegidas}
+        tarjetaId={tarjetaId}
+        total={total}
+        onCancelar={() => setConfirmando(false)}
+        onConfirmar={() => {
+          setConfirmando(false);
+          ejecutarPago();
+        }}
+      />
 
       <PagoModal
         estado={estadoPago}
@@ -259,6 +300,8 @@ const styles = StyleSheet.create({
     backgroundColor: colores.blanco, borderTopWidth: 1, borderColor: colores.borde,
   },
   pagar: { backgroundColor: colores.acento, borderRadius: radios.boton, paddingVertical: 15, alignItems: "center" },
+  reservar: { alignItems: "center", paddingTop: 12, paddingBottom: 2 },
+  reservarTexto: { color: "#B5503C", fontWeight: "700", fontSize: 14 },
   pagarInactivo: { backgroundColor: colores.textoPlaceholder },
   pagarTexto: { color: colores.blanco, fontWeight: "700", fontSize: 16 },
 });

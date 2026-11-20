@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  FlatList, Image, Pressable, ScrollView, StyleSheet,
+  ActivityIndicator, FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet,
   Text, TextInput, useWindowDimensions, View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { get } from "../api";
 import { useSesion } from "../sesion";
 import { useEventos } from "../eventos";
+import Avatar from "../componentes/Avatar";
+import Chip from "../componentes/Chip";
 import Logo from "../componentes/Logo";
 import BotonFavorito from "../componentes/BotonFavorito";
 import TarjetaEvento, { iconoDe } from "../componentes/TarjetaEvento";
@@ -28,7 +30,7 @@ export default function EventosScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   // Los eventos, categorías y favoritos vienen del almacén global (se piden una sola vez).
-  const { eventos: todos, categorias, favoritos, esFavorito, alternarFavorito, recargar } = useEventos();
+  const { eventos: todos, categorias, favoritos, esFavorito, alternarFavorito, recargar, cargado } = useEventos();
   const [filtrados, setFiltrados] = useState([]);
   const [texto, setTexto] = useState("");
   const [textoBuscado, setTextoBuscado] = useState("");
@@ -82,24 +84,36 @@ export default function EventosScreen({ navigation }) {
 
   const encabezado = (
     <View>
-      <Logo tamano={28} />
+      <View style={[styles.cabecera, { paddingTop: insets.top + 12 }]}>
+        <View style={styles.cabeceraFila}>
+          <Logo tamano={26} claro />
+          <Pressable style={styles.pastilla} onPress={() => navigation.navigate("Perfil")} hitSlop={8}>
+            <Ionicons name="settings-outline" size={20} color={colores.blanco} />
+            <Avatar foto={sesion.usuario.foto} nombre={sesion.usuario.nombre} tamano={36} />
+          </Pressable>
+        </View>
 
-      <Text style={styles.saludo}>
-        <Text style={styles.hola}>Hola, </Text>
-        {sesion.usuario.nombre}
-      </Text>
-
-      <View style={styles.buscador}>
-        <Ionicons name="search-outline" size={20} color={colores.textoSuave} />
-        <TextInput
-          style={styles.buscadorInput}
-          placeholder="Buscar conciertos, teatro, festivales..."
-          placeholderTextColor={colores.textoPlaceholder}
-          value={texto}
-          onChangeText={setTexto}
-        />
+        <Text style={styles.saludo}>
+          <Text style={styles.hola}>Hola, </Text>
+          {sesion.usuario.nombre}
+        </Text>
       </View>
 
+      <View style={styles.buscadorMargen}>
+        <View style={styles.buscador}>
+          <Ionicons name="search-outline" size={20} color={colores.textoSuave} />
+          <TextInput
+            style={styles.buscadorInput}
+            placeholder="Buscar conciertos, teatro, festivales..."
+            placeholderTextColor={colores.textoPlaceholder}
+            value={texto}
+            onChangeText={setTexto}
+          />
+        </View>
+      </View>
+
+      <View style={styles.cuerpo}>
+      <Text style={styles.etiquetaCategorias}>Explorar categorías</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         <Chip etiqueta="Todas" activo={categoriaId === null} onPress={() => setCategoriaId(null)} />
         {categorias.map((c) => (
@@ -111,7 +125,7 @@ export default function EventosScreen({ navigation }) {
         <Text style={styles.seccion}>Mis favoritos</Text>
         {favoritosVigentes.length > 0 && (
           <Pressable onPress={() => navigation.navigate("Favoritos")} hitSlop={8}>
-            <Text style={styles.verTodos}>Ver todos</Text>
+            <Text style={styles.verTodos}>Ver todos  →</Text>
           </Pressable>
         )}
       </View>
@@ -162,28 +176,41 @@ export default function EventosScreen({ navigation }) {
         ))}
       </ScrollView>
       <View style={{ height: 8 }} />
+      </View>
     </View>
   );
 
   return (
-    <View style={[styles.contenedor, { paddingTop: insets.top + 8 }]}>
+    <View style={styles.contenedor}>
       <FlatList
         data={eventos}
-        refreshing={refrescando}
-        onRefresh={refrescar}
+        refreshControl={
+          <RefreshControl
+            refreshing={refrescando}
+            onRefresh={refrescar}
+            tintColor={colores.acento}
+            colors={[colores.acento]}
+            progressBackgroundColor="#FFFFFF"
+            progressViewOffset={insets.top + 20}
+          />
+        }
         keyExtractor={(evento) => String(evento.id)}
         contentContainerStyle={styles.lista}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={encabezado}
-        ListEmptyComponent={<Text style={styles.centro}>No hay eventos</Text>}
+        ListEmptyComponent={
+          cargado ? <Text style={styles.centro}>No hay eventos</Text> : <ActivityIndicator style={{ marginTop: 40 }} size="large" color={colores.acento} />
+        }
         renderItem={({ item }) => (
-          <TarjetaEvento
-            evento={item}
-            favorito={esFavorito(item.id)}
-            onPress={() => abrir(item)}
-            onFavorito={() => alternarFavorito(item)}
-          />
+          <View style={styles.cuerpo}>
+            <TarjetaEvento
+              evento={item}
+              favorito={esFavorito(item.id)}
+              onPress={() => abrir(item)}
+              onFavorito={() => alternarFavorito(item)}
+            />
+          </View>
         )}
       />
     </View>
@@ -193,6 +220,9 @@ export default function EventosScreen({ navigation }) {
 // Tarjeta del carrusel: foto con el nombre y la fecha encima.
 function TarjetaFavorito({ evento, ancho, onPress, onFavorito }) {
   const foto = imagenDe(evento);
+  // Quedan pocas entradas en total.
+  const quedan = evento.tiposEntrada.reduce((suma, t) => suma + t.cupoDisponible, 0);
+  const agotandose = quedan > 0 && quedan <= 20;
 
   return (
     <Pressable style={[styles.favorito, { width: ancho, marginRight: SEPARACION }]} onPress={onPress}>
@@ -204,6 +234,11 @@ function TarjetaFavorito({ evento, ancho, onPress, onFavorito }) {
       <View style={styles.favoritoCorazon}>
         <BotonFavorito activo onPress={onFavorito} />
       </View>
+      {agotandose && (
+        <View style={styles.insignia}>
+          <Text style={styles.insigniaTexto}>Agotándose</Text>
+        </View>
+      )}
       <View style={styles.favoritoTextos}>
         <Text style={styles.favoritoNombre} numberOfLines={1}>{evento.nombre}</Text>
         <Text style={styles.favoritoFecha}>{formatearFechaLarga(evento.fecha)}</Text>
@@ -212,38 +247,45 @@ function TarjetaFavorito({ evento, ancho, onPress, onFavorito }) {
   );
 }
 
-function Chip({ etiqueta, icono, activo, onPress }) {
-  return (
-    <Pressable onPress={onPress} style={[styles.chip, activo && styles.chipActivo]}>
-      {icono && <Ionicons name={icono} size={17} color={activo ? colores.blanco : colores.textoSuave} />}
-      <Text style={[styles.chipTexto, activo && styles.chipTextoActivo]}>{etiqueta}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  contenedor: { flex: 1, backgroundColor: colores.fondo, paddingHorizontal: 16 },
+  contenedor: { flex: 1, backgroundColor: colores.fondo },
   lista: { paddingBottom: 24 },
+  cuerpo: { paddingHorizontal: 16 },
 
-  saludo: { fontSize: 30, fontWeight: "800", color: colores.indigo, marginTop: 18, marginBottom: 14 },
-  hola: { fontWeight: "500", color: colores.textoSuave },
-
-  buscador: {
-    flexDirection: "row", alignItems: "center", gap: 8, height: 48,
-    backgroundColor: colores.blanco, borderWidth: 1, borderColor: colores.borde,
-    borderRadius: radios.campo, paddingHorizontal: 14, marginBottom: 12,
+  cabecera: {
+    backgroundColor: colores.indigo, paddingHorizontal: 16, paddingBottom: 40,
+    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
   },
+  cabeceraFila: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  pastilla: {
+    flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 24, paddingLeft: 12, paddingRight: 4, height: 44,
+  },
+  avatar: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: colores.acento,
+    alignItems: "center", justifyContent: "center",
+  },
+  avatarTexto: { color: colores.blanco, fontWeight: "800", fontSize: 16 },
+  etiquetaCategorias: { color: colores.textoSuave, fontWeight: "600", fontSize: 13, marginTop: 18, marginBottom: 10 },
+
+  saludo: { fontSize: 30, fontWeight: "800", color: colores.blanco, marginTop: 18 },
+  hola: { fontWeight: "500", color: "rgba(255,255,255,0.85)" },
+
+  buscadorMargen: { marginTop: -26, paddingHorizontal: 16 },
+  buscador: {
+    flexDirection: "row", alignItems: "center", gap: 8, height: 52,
+    backgroundColor: colores.blanco, borderRadius: radios.campo, paddingHorizontal: 14,
+    elevation: 4, shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+  },
+
+  insignia: {
+    position: "absolute", right: 10, bottom: 62, backgroundColor: colores.acento,
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4,
+  },
+  insigniaTexto: { color: colores.blanco, fontWeight: "700", fontSize: 12 },
   buscadorInput: { flex: 1, fontSize: 15, color: colores.indigo },
 
   chips: { gap: 8, paddingBottom: 6 },
-  chip: {
-    height: 42, flexDirection: "row", alignItems: "center", gap: 6,
-    borderWidth: 1, borderColor: colores.borde, backgroundColor: colores.blanco,
-    borderRadius: 21, paddingHorizontal: 18,
-  },
-  chipActivo: { backgroundColor: colores.acento, borderColor: colores.acento },
-  chipTexto: { color: colores.indigo, fontWeight: "600", fontSize: 15 },
-  chipTextoActivo: { color: colores.blanco, fontWeight: "700" },
 
   tituloSeccion: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, marginBottom: 10 },
   seccion: { fontSize: 20, fontWeight: "800", color: colores.indigo },
@@ -266,7 +308,7 @@ const styles = StyleSheet.create({
   favoritoFecha: { color: "rgba(255,255,255,0.85)", fontSize: 13, marginTop: 1 },
 
   puntos: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 10 },
-  punto: { width: 7, height: 7, borderRadius: 4, backgroundColor: colores.borde },
+  punto: { width: 7, height: 7, borderRadius: 4, backgroundColor: "rgba(15,23,42,0.25)" },
   puntoActivo: { backgroundColor: colores.acento, width: 18 },
 
   centro: { marginTop: 40, textAlign: "center", color: colores.textoSuave },

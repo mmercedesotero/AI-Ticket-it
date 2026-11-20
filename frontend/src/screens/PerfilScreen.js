@@ -1,3 +1,6 @@
+import { useRefrescar } from "../refrescar";
+import Avatar from "../componentes/Avatar";
+import CabeceraPantalla from "../componentes/CabeceraPantalla";
 import { alerta } from "../dialogo";
 import { useCallback, useState } from "react";
 import {
@@ -14,8 +17,8 @@ import { colores, radios } from "../tema";
 const OPCIONES = [
   { icono: "card-outline", texto: "Mis métodos de pago", destino: "Tarjetas", soloComprador: true },
   { icono: "notifications-outline", texto: "Notificaciones", destino: "Notificaciones" },
-  { icono: "help-circle-outline", texto: "Ayuda y soporte" },
-  { icono: "document-text-outline", texto: "Términos y condiciones" },
+  { icono: "help-circle-outline", texto: "Ayuda y soporte", destino: "Ayuda" },
+  { icono: "document-text-outline", texto: "Términos y condiciones", destino: "Terminos" },
 ];
 
 export default function PerfilScreen({ navigation }) {
@@ -27,9 +30,8 @@ export default function PerfilScreen({ navigation }) {
 
   const nombreCompleto = usuario.apellido ? `${usuario.nombre} ${usuario.apellido}` : usuario.nombre;
 
-  useFocusEffect(
-    useCallback(() => {
-      const cargar = async () => {
+  const cargar = useCallback(
+    async () => {
         try {
           if (esOrganizador) {
             const [eventos, resenias] = await Promise.all([
@@ -50,27 +52,19 @@ export default function PerfilScreen({ navigation }) {
         } catch {
           setNumeros([null, null]);
         }
-      };
+    },
+    [esOrganizador, usuario.id, nombreCompleto]
+  );
+  const { control } = useRefrescar(cargar);
+
+  useFocusEffect(
+    useCallback(() => {
       cargar();
-    }, [esOrganizador, usuario.id, nombreCompleto])
+    }, [cargar])
   );
 
   const proximamente = (titulo) =>
     alerta(titulo, "Esta sección todavía no está disponible.");
-
-  // Los organizadores y los compradores son cuentas distintas: para cambiar de modo hay que entrar con la otra.
-  const cambiarModo = () => {
-    alerta(
-      esOrganizador ? "Cambiar a Modo Comprador" : "Cambiar a Modo Organizador",
-      esOrganizador
-        ? "Vas a cerrar esta sesión para entrar con una cuenta de comprador."
-        : "Vas a cerrar esta sesión para entrar con una cuenta de organizador.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Continuar", onPress: cerrarSesion },
-      ]
-    );
-  };
 
   const salir = () => {
     alerta("Cerrar sesión", "¿Querés cerrar tu sesión?", [
@@ -82,17 +76,17 @@ export default function PerfilScreen({ navigation }) {
   const mostrar = (n) => (n === null ? "–" : String(n));
 
   return (
+    <View style={styles.fondo}>
+    <CabeceraPantalla titulo="Mi perfil" />
     <ScrollView
       style={styles.fondo}
-      contentContainerStyle={[styles.contenedor, { paddingTop: insets.top + 8 }]}
+      contentContainerStyle={[styles.contenedor, { paddingTop: 18 }]}
       showsVerticalScrollIndicator={false}
+      refreshControl={control}
     >
-      <Text style={styles.titulo}>Mi Perfil</Text>
 
       <View style={styles.cabecera}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarTexto}>{usuario.nombre.charAt(0).toUpperCase()}</Text>
-        </View>
+        <Avatar foto={usuario.foto} nombre={usuario.nombre} tamano={76} />
         <View style={styles.datos}>
           <Text style={styles.nombre}>{nombreCompleto}</Text>
           {usuario.email && <Text style={styles.email}>{usuario.email}</Text>}
@@ -114,14 +108,8 @@ export default function PerfilScreen({ navigation }) {
         </View>
       </View>
 
-      <Pressable style={styles.cambiar} onPress={cambiarModo}>
-        <Text style={styles.cambiarTexto}>
-          {esOrganizador ? "Cambiar a Modo Comprador" : "Cambiar a Modo Organizador"}
-        </Text>
-        <Ionicons name="chevron-forward" size={18} color={colores.acento} />
-      </Pressable>
-
       <View style={styles.lista}>
+        <Fila icono="create-outline" texto="Editar perfil" onPress={() => navigation.navigate("EditarPerfil")} />
         {!esOrganizador && (
           <Fila icono="heart-outline" texto="Mis favoritos" onPress={() => navigation.navigate("Favoritos")} />
         )}
@@ -138,6 +126,7 @@ export default function PerfilScreen({ navigation }) {
         <Fila icono="log-out-outline" texto="Cerrar sesión" peligro onPress={salir} />
       </View>
     </ScrollView>
+    </View>
   );
 }
 

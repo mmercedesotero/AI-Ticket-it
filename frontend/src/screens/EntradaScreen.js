@@ -8,7 +8,7 @@ import { alerta } from "../dialogo";
 import { descargarComprobante } from "../comprobante";
 import TicketCard from "../componentes/TicketCard";
 import { iconoDe } from "../componentes/TarjetaEvento";
-import { ESTADOS, codigoDe, esPasada, textoDias } from "../compras";
+import { ESTADOS, estiloEstado, codigoDe, esPasada, textoDias, textoReserva } from "../compras";
 import { colores, radios } from "../tema";
 import { formatearFechaHora, formatearFechaLarga, formatearPrecio, tiempoRelativo } from "../formato";
 import { imagenDe } from "../imagenes";
@@ -128,12 +128,19 @@ export default function EntradaScreen({ route, navigation }) {
                 </Text>
               </View>
             )}
-            <View style={[styles.estado, { backgroundColor: estado.color }]}>
-              <Text style={styles.estadoTexto}>{estado.texto}</Text>
+            <View style={[styles.estado, estiloEstado(estado).etiqueta]}>
+              <Text style={[styles.estadoTexto, estiloEstado(estado).texto]}>{estado.texto}</Text>
             </View>
           </View>
         }
       />
+
+      {compra.estado === "PENDIENTE_PAGO" && !esPasada(compra) && (
+        <View style={styles.dias}>
+          <Ionicons name="hourglass-outline" size={16} color={colores.acento} />
+          <Text style={[styles.diasTexto, { color: colores.acento }]}>{textoReserva(compra)}</Text>
+        </View>
+      )}
 
       {dias !== null && dias >= 0 && (
         <View style={styles.dias}>
@@ -187,7 +194,7 @@ export default function EntradaScreen({ route, navigation }) {
         )}
       </View>
 
-      <Text style={styles.seccion}>Estado del pedido</Text>
+      <Text style={styles.seccion}>Historial</Text>
       <View style={styles.linea_tiempo}>
         {historial.map((cambio, i) => {
           const paso = PASOS[cambio.estado];

@@ -36,7 +36,7 @@ export default function LoginScreen({ navigation }) {
           <Logo tamano={30} />
         </View>
 
-        <Text style={styles.bienvenida}>¡Te damos la bienvenida!</Text>
+        <Text style={styles.bienvenida}>Entradas a un Click</Text>
         <Text style={styles.titulo}>Iniciar Sesión</Text>
 
         <Text style={styles.label}>Correo electrónico</Text>
@@ -93,15 +93,15 @@ const styles = StyleSheet.create({
   fondo: { flex: 1, backgroundColor: colores.blanco },
   contenedor: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 32 },
   logo: { alignItems: "center", marginBottom: 40 },
-  bienvenida: { textAlign: "center", color: colores.textoSuave, fontSize: 14 },
+  bienvenida: { textAlign: "center", color: colores.textoSuave, fontSize: 16, marginBottom: 15, marginTop: -20 },
   titulo: { textAlign: "center", fontSize: 28, fontWeight: "800", color: colores.indigo, marginTop: 4, marginBottom: 28 },
   label: { fontWeight: "600", color: colores.indigo, marginBottom: 6, marginTop: 4 },
   campo: { ...estilosBase.campo, marginBottom: 12 },
   campoConIcono: { ...estilosBase.campo, flexDirection: "row", alignItems: "center", marginBottom: 8 },
   inputPassword: { flex: 1, fontSize: 15, color: colores.indigo, padding: 0 },
-  olvide: { alignSelf: "flex-end", marginBottom: 8 },
+  olvide: { alignSelf: "flex-end", marginBottom: 8, marginTop: 10 },
   boton: { marginTop: 12 },
   enviando: { opacity: 0.6 },
-  pie: { textAlign: "center", color: colores.textoSuave, marginTop: 28 },
+  pie: { textAlign: "center", color: colores.textoSuave, marginTop: 28, fontSize: 15 },
   enlace: { color: colores.acento, fontWeight: "700" },
 });

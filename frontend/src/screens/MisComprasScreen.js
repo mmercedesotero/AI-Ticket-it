@@ -4,10 +4,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
+import CabeceraPantalla from "../componentes/CabeceraPantalla";
 import TicketCard from "../componentes/TicketCard";
 import { iconoDe } from "../componentes/TarjetaEvento";
 import { imagenDe } from "../imagenes";
-import { ESTADOS, esPasada, textoDias } from "../compras";
+import { ESTADOS, esPasada, estiloEstado, textoDias, textoReserva } from "../compras";
 import { colores } from "../tema";
 import { formatearFechaLarga, formatearPrecio } from "../formato";
 
@@ -45,8 +46,8 @@ export default function MisComprasScreen({ navigation }) {
   const visibles = pestania === "activas" ? activas : pasadas;
 
   return (
-    <View style={[styles.contenedor, { paddingTop: insets.top + 8 }]}>
-      <Text style={styles.titulo}>Mis Compras</Text>
+    <View style={styles.contenedor}>
+      <CabeceraPantalla titulo="Mis compras" />
 
       <View style={styles.pestanias}>
         <Pestania texto={`Activas (${activas.length})`} activa={pestania === "activas"} onPress={() => setPestania("activas")} />
@@ -85,12 +86,13 @@ function Entrada({ compra, navigation }) {
       arriba={
         <View style={styles.arribaFila}>
           <View style={styles.info}>
-            <View style={[styles.estado, { backgroundColor: estado.color }]}>
-              <Text style={styles.estadoTexto}>{estado.texto}</Text>
+            <View style={[styles.estado, estiloEstado(estado).etiqueta]}>
+              <Text style={[styles.estadoTexto, estiloEstado(estado).texto]}>{estado.texto}</Text>
             </View>
             <Text style={styles.nombre} numberOfLines={2}>{compra.evento.nombre}</Text>
             <Linea icono="calendar-outline" texto={formatearFechaLarga(compra.evento.fecha)} />
             <Linea icono="business-outline" texto={compra.evento.organizador?.nombre ?? "Sin organizador"} />
+            {pendiente && <Text style={styles.dias}>{textoReserva(compra)}</Text>}
             {compra.diasParaEvento !== null && compra.diasParaEvento !== undefined && (
               <Text style={styles.dias}>{textoDias(compra.diasParaEvento)}</Text>
             )}
@@ -135,7 +137,7 @@ function Entrada({ compra, navigation }) {
               style={styles.puntuar}
               onPress={() => navigation.navigate("Resena", { compraId: compra.id, evento: compra.evento.nombre })}
             >
-              <Ionicons name="star" size={16} color="#B45309" />
+              <Ionicons name="star" size={16} color="#B5503C" />
               <Text style={styles.puntuarTexto}>Puntuar evento</Text>
             </Pressable>
           )}
@@ -164,8 +166,6 @@ function Linea({ icono, texto }) {
 
 const styles = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: colores.fondo },
-  titulo: { fontSize: 26, fontWeight: "800", color: colores.indigo, paddingHorizontal: 16, marginBottom: 12 },
-
   pestanias: { flexDirection: "row", borderBottomWidth: 1, borderColor: colores.borde, backgroundColor: colores.blanco },
   pestania: { flex: 1, alignItems: "center", paddingVertical: 12, borderBottomWidth: 2, borderColor: "transparent" },
   pestaniaActiva: { borderColor: colores.acento },
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   nombre: { fontSize: 17, fontWeight: "800", color: colores.indigo, marginBottom: 4 },
   linea: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
   lineaTexto: { color: colores.textoSuave, fontSize: 13, flexShrink: 1 },
-  dias: { color: colores.exito, fontWeight: "700", fontSize: 13, marginTop: 6 },
+  dias: { color: colores.acento, fontWeight: "700", fontSize: 13, marginTop: 6 },
 
   foto: {
     width: 92, height: 92, borderRadius: 10, overflow: "hidden", backgroundColor: colores.indigo,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   fotoImagen: { width: "100%", height: "100%" },
   estado: { alignSelf: "flex-start", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, marginBottom: 6 },
-  estadoTexto: { color: colores.blanco, fontSize: 11, fontWeight: "700" },
+  estadoTexto: { fontSize: 11, fontWeight: "700" },
 
   abajoFila: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   entrada: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -198,9 +198,9 @@ const styles = StyleSheet.create({
   botonCoralTexto: { color: colores.blanco, fontWeight: "700" },
   puntuar: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
-    backgroundColor: "#FEF3C7", borderWidth: 1, borderColor: "#FCD34D", borderRadius: 10, padding: 12, marginTop: 12,
+    backgroundColor: "rgba(239,128,108,0.10)", borderWidth: 1, borderColor: "rgba(239,128,108,0.30)", borderRadius: 10, padding: 12, marginTop: 12,
   },
-  puntuarTexto: { color: "#B45309", fontWeight: "700" },
+  puntuarTexto: { color: "#B5503C", fontWeight: "700" },
 
   centro: { marginTop: 60, textAlign: "center", color: colores.textoSuave },
 });

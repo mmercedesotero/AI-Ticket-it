@@ -6,6 +6,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
 import { useEventos } from "../eventos";
 import { useSesion } from "../sesion";
+import { useRefrescar } from "../refrescar";
+import CabeceraPantalla from "../componentes/CabeceraPantalla";
+import Chip from "../componentes/Chip";
+import Segmentos from "../componentes/Segmentos";
 import { iconoDe } from "../componentes/TarjetaEvento";
 import { colores, radios } from "../tema";
 import { formatearFechaLarga } from "../formato";
@@ -13,28 +17,38 @@ import { imagenDe } from "../imagenes";
 
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
+const CORAL_OSCURO = "#B5503C";
+const AZUL = "#2563EB";
 
 const clave = (anio, mes, dia) => `${anio}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 
-// Calendario del mes, al estilo del de iOS: los días con eventos llevan un puntito debajo.
+// Calendario del mes: los días con eventos se marcan con un cuadradito y un punto de color.
 // El comprador ve sus entradas y sus favoritos; el organizador ve sus eventos.
 export default function CalendarioScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { sesion } = useSesion();
-  const { eventos, favoritos } = useEventos();
+  const { eventos, favoritos, recargar } = useEventos();
   const esOrganizador = sesion.rol === "ORGANIZADOR";
 
   const hoy = new Date();
+  const claveHoy = clave(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   const [anio, setAnio] = useState(hoy.getFullYear());
   const [mes, setMes] = useState(hoy.getMonth());
-  const [seleccionado, setSeleccionado] = useState(clave(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+  const [diaElegido, setDiaElegido] = useState(null);
+  const [filtro, setFiltro] = useState("todos");
   const [compras, setCompras] = useState([]);
+
+  const cargarCompras = useCallback(
+    () => (esOrganizador ? Promise.resolve() : get("/compras").then(setCompras).catch(() => {})),
+    [esOrganizador]
+  );
+  const { control } = useRefrescar(() => Promise.all([recargar(), cargarCompras()]));
 
   // Las compras se piden cada vez que se entra a la pestaña, para que estén al día.
   useFocusEffect(
     useCallback(() => {
-      if (!esOrganizador) get("/compras").then(setCompras).catch(() => {});
-    }, [esOrganizador])
+      cargarCompras();
+    }, [cargarCompras])
   );
 
   // fecha (AAAA-MM-DD) -> lista de { evento, tipo, compra }
@@ -42,7 +56,7 @@ export default function CalendarioScreen({ navigation }) {
     const mapa = {};
     const agregar = (fecha, item) => {
       mapa[fecha] = mapa[fecha] ?? [];
-      // Si el mismo evento ya está en ese día con otro tipo, se prioriza "entrada" sobre "favorito".
+      // Si el mismo evento ya está ese día con otro tipo, se prioriza "entrada" sobre "favorito".
       const existente = mapa[fecha].find((x) => x.evento.id === item.evento.id);
       if (!existente) mapa[fecha].push(item);
       else if (item.tipo === "entrada" && existente.tipo !== "entrada") Object.assign(existente, item);
@@ -65,12 +79,13 @@ export default function CalendarioScreen({ navigation }) {
     const nuevo = new Date(anio, mes + diferencia, 1);
     setAnio(nuevo.getFullYear());
     setMes(nuevo.getMonth());
+    setDiaElegido(null);
   };
 
   const irAHoy = () => {
     setAnio(hoy.getFullYear());
     setMes(hoy.getMonth());
-    setSeleccionado(clave(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+    setDiaElegido(claveHoy);
   };
 
   // Celdas del mes: huecos al principio (la semana empieza el lunes) y después los días.
@@ -78,15 +93,26 @@ export default function CalendarioScreen({ navigation }) {
   const huecos = (new Date(anio, mes, 1).getDay() + 6) % 7;
   const celdas = [...Array(huecos).fill(null), ...Array.from({ length: diasDelMes }, (_, i) => i + 1)];
 
-  const claveHoy = clave(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-  const delDia = porDia[seleccionado] ?? [];
-
-  // Próximos eventos del mes visible (para cuando el día elegido no tiene nada).
+  // Eventos del mes visible, o solo los del día elegido.
   const prefijoMes = `${anio}-${String(mes + 1).padStart(2, "0")}`;
   const delMes = Object.keys(porDia)
     .filter((f) => f.startsWith(prefijoMes))
     .sort()
     .flatMap((f) => porDia[f]);
+
+  const cantidadEntradas = delMes.filter((x) => x.tipo === "entrada").length;
+  const cantidadFavoritos = delMes.filter((x) => x.tipo === "favorito").length;
+
+  const base = diaElegido && porDia[diaElegido] ? porDia[diaElegido] : delMes;
+  const lista = base.filter((x) => filtro === "todos" || (filtro === "entradas" ? x.tipo === "entrada" : x.tipo === "favorito"));
+
+  const opciones = esOrganizador
+    ? null
+    : [
+        { clave: "todos", etiqueta: "Todos" },
+        { clave: "entradas", etiqueta: `Mis entradas (${cantidadEntradas})` },
+        { clave: "favoritos", etiqueta: `Favoritos (${cantidadFavoritos})` },
+      ];
 
   const abrir = (item) => {
     if (item.compra) navigation.navigate("Entrada", { compraId: item.compra.id });
@@ -95,98 +121,121 @@ export default function CalendarioScreen({ navigation }) {
   };
 
   return (
-    <ScrollView
-      style={styles.fondo}
-      contentContainerStyle={[styles.contenedor, { paddingTop: insets.top + 8 }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.titulo}>Calendario</Text>
+    <View style={styles.fondo}>
+      <CabeceraPantalla titulo="Calendario" />
+      <ScrollView
+        contentContainerStyle={[styles.contenedor, { paddingBottom: 24 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={control}
+      >
+        <View style={styles.tarjeta}>
+          <View style={styles.mesFila}>
+            <Text style={styles.mes}>
+              {MESES[mes]} <Text style={styles.anio}>{anio}</Text>
+            </Text>
+            <View style={styles.controles}>
+              <Pressable style={styles.flecha} onPress={() => cambiarMes(-1)} hitSlop={8}>
+                <Ionicons name="chevron-back" size={18} color={colores.indigo} />
+              </Pressable>
+              <Pressable style={styles.flecha} onPress={() => cambiarMes(1)} hitSlop={8}>
+                <Ionicons name="chevron-forward" size={18} color={colores.indigo} />
+              </Pressable>
+              <Chip etiqueta="Hoy" onPress={irAHoy} />
+            </View>
+          </View>
 
-      <View style={styles.mesFila}>
-        <Text style={styles.mes}>
-          {MESES[mes]} <Text style={styles.anio}>{anio}</Text>
-        </Text>
-        <View style={styles.controles}>
-          <Pressable onPress={irAHoy} hitSlop={8}>
-            <Text style={styles.hoy}>Hoy</Text>
-          </Pressable>
-          <Pressable onPress={() => cambiarMes(-1)} hitSlop={10}>
-            <Ionicons name="chevron-back" size={24} color={colores.indigo} />
-          </Pressable>
-          <Pressable onPress={() => cambiarMes(1)} hitSlop={10}>
-            <Ionicons name="chevron-forward" size={24} color={colores.indigo} />
-          </Pressable>
-        </View>
-      </View>
+          <View style={styles.semana}>
+            {DIAS.map((d, i) => (
+              <Text key={i} style={styles.diaSemana}>{d}</Text>
+            ))}
+          </View>
 
-      <View style={styles.semana}>
-        {DIAS.map((d, i) => (
-          <Text key={i} style={styles.diaSemana}>{d}</Text>
-        ))}
-      </View>
+          <View style={styles.grilla}>
+            {celdas.map((dia, i) => {
+              if (dia === null) return <View key={`h${i}`} style={styles.celda} />;
 
-      <View style={styles.grilla}>
-        {celdas.map((dia, i) => {
-          if (dia === null) return <View key={`h${i}`} style={styles.celda} />;
+              const k = clave(anio, mes, dia);
+              const eventosDia = porDia[k] ?? [];
+              const esHoy = k === claveHoy;
+              const elegido = k === diaElegido;
+              const tieneEntrada = eventosDia.some((x) => x.tipo === "entrada" || x.tipo === "propio");
+              const tieneFavorito = eventosDia.some((x) => x.tipo === "favorito");
+              const conEventos = eventosDia.length > 0;
 
-          const k = clave(anio, mes, dia);
-          const eventosDia = porDia[k] ?? [];
-          const esHoy = k === claveHoy;
-          const elegido = k === seleccionado;
-          const tieneEntrada = eventosDia.some((x) => x.tipo === "entrada" || x.tipo === "propio");
-          const tieneFavorito = eventosDia.some((x) => x.tipo === "favorito");
+              return (
+                <Pressable key={k} style={styles.celda} onPress={() => setDiaElegido(elegido ? null : k)}>
+                  <View
+                    style={[
+                      styles.numero,
+                      conEventos && styles.numeroConEventos,
+                      esHoy && styles.numeroHoy,
+                      elegido && !esHoy && styles.numeroElegido,
+                    ]}
+                  >
+                    <Text style={[styles.numeroTexto, esHoy && styles.numeroTextoHoy, elegido && !esHoy && { color: colores.indigo, fontWeight: "800" }]}>
+                      {dia}
+                    </Text>
+                    <View style={styles.puntos}>
+                      {tieneEntrada && <View style={[styles.punto, { backgroundColor: esHoy ? colores.blanco : colores.acento }]} />}
+                      {tieneFavorito && <View style={[styles.punto, { backgroundColor: esHoy ? colores.blanco : AZUL }]} />}
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
 
-          return (
-            <Pressable key={k} style={styles.celda} onPress={() => setSeleccionado(k)}>
-              <View style={[styles.numero, esHoy && styles.numeroHoy, elegido && !esHoy && styles.numeroElegido]}>
-                <Text style={[styles.numeroTexto, esHoy && styles.numeroTextoHoy, elegido && !esHoy && styles.numeroTextoElegido]}>
-                  {dia}
-                </Text>
+          <View style={styles.leyenda}>
+            <View style={styles.leyendaItem}>
+              <View style={[styles.punto, { backgroundColor: colores.acento }]} />
+              <Text style={styles.leyendaTexto}>{esOrganizador ? "Tus eventos" : "Tus entradas"}</Text>
+            </View>
+            {!esOrganizador && (
+              <View style={styles.leyendaItem}>
+                <View style={[styles.punto, { backgroundColor: AZUL }]} />
+                <Text style={styles.leyendaTexto}>Favoritos</Text>
               </View>
-              <View style={styles.puntos}>
-                {tieneEntrada && <View style={[styles.punto, { backgroundColor: colores.acento }]} />}
-                {tieneFavorito && <View style={[styles.punto, { backgroundColor: "#94A3B8" }]} />}
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View style={styles.leyenda}>
-        <View style={styles.leyendaItem}>
-          <View style={[styles.punto, { backgroundColor: colores.acento }]} />
-          <Text style={styles.leyendaTexto}>{esOrganizador ? "Tus eventos" : "Tus entradas"}</Text>
+            )}
+          </View>
         </View>
-        {!esOrganizador && (
-          <View style={styles.leyendaItem}>
-            <View style={[styles.punto, { backgroundColor: "#94A3B8" }]} />
-            <Text style={styles.leyendaTexto}>Favoritos</Text>
+
+        {opciones && (
+          <View style={{ marginTop: 16 }}>
+            <Segmentos opciones={opciones} valor={filtro} onCambiar={setFiltro} />
           </View>
         )}
-      </View>
 
-      <Text style={styles.seccion}>
-        {delDia.length > 0 ? formatearFechaLarga(seleccionado) : "Eventos de este mes"}
-      </Text>
-
-      {(delDia.length > 0 ? delDia : delMes).map((item) => (
-        <Fila key={`${item.evento.id}-${item.tipo}`} item={item} onPress={() => abrir(item)} />
-      ))}
-
-      {delDia.length === 0 && delMes.length === 0 && (
-        <View style={styles.vacio}>
-          <Ionicons name="calendar-outline" size={40} color={colores.textoPlaceholder} />
-          <Text style={styles.vacioTexto}>
-            {esOrganizador ? "No tenés eventos este mes." : "No tenés entradas ni favoritos este mes."}
+        <View style={styles.seccionFila}>
+          <Text style={styles.seccion}>
+            {diaElegido && porDia[diaElegido] ? formatearFechaLarga(diaElegido) : `Eventos de ${MESES[mes].toLowerCase()}`}
           </Text>
+          {diaElegido && (
+            <Pressable onPress={() => setDiaElegido(null)} hitSlop={8}>
+              <Text style={styles.verMes}>Ver todo el mes</Text>
+            </Pressable>
+          )}
         </View>
-      )}
-    </ScrollView>
+
+        {lista.map((item) => (
+          <Fila key={`${item.evento.id}-${item.tipo}`} item={item} onPress={() => abrir(item)} />
+        ))}
+
+        {lista.length === 0 && (
+          <View style={styles.vacio}>
+            <Ionicons name="calendar-outline" size={40} color={colores.textoPlaceholder} />
+            <Text style={styles.vacioTexto}>
+              {esOrganizador ? "No tenés eventos este mes." : "No hay nada para mostrar este mes."}
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 function Fila({ item, onPress }) {
   const foto = imagenDe(item.evento);
+  const entrada = item.tipo === "entrada" || item.tipo === "propio";
   const etiqueta = item.tipo === "entrada" ? "Tu entrada" : item.tipo === "propio" ? "Tu evento" : "Favorito";
 
   return (
@@ -201,9 +250,11 @@ function Fila({ item, onPress }) {
       <View style={styles.filaTextos}>
         <Text style={styles.filaNombre} numberOfLines={1}>{item.evento.nombre}</Text>
         <Text style={styles.filaFecha}>{formatearFechaLarga(item.evento.fecha)}</Text>
+        <Text style={styles.filaLugar} numberOfLines={1}>{item.evento.organizador?.nombre}</Text>
       </View>
-      <View style={[styles.etiqueta, item.tipo === "favorito" && styles.etiquetaFavorito]}>
-        <Text style={[styles.etiquetaTexto, item.tipo === "favorito" && styles.etiquetaTextoFavorito]}>{etiqueta}</Text>
+      <View style={[styles.etiqueta, entrada ? styles.etiquetaEntrada : styles.etiquetaFavorito]}>
+        <Ionicons name={entrada ? "ticket-outline" : "heart"} size={11} color={entrada ? CORAL_OSCURO : AZUL} />
+        <Text style={[styles.etiquetaTexto, { color: entrada ? CORAL_OSCURO : AZUL }]}>{etiqueta}</Text>
       </View>
     </Pressable>
   );
@@ -211,48 +262,57 @@ function Fila({ item, onPress }) {
 
 const styles = StyleSheet.create({
   fondo: { flex: 1, backgroundColor: colores.fondo },
-  contenedor: { paddingHorizontal: 16, paddingBottom: 32 },
-  titulo: { fontSize: 26, fontWeight: "800", color: colores.indigo, marginBottom: 16 },
+  contenedor: { padding: 16 },
 
-  mesFila: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  mes: { fontSize: 22, fontWeight: "800", color: colores.indigo },
+  tarjeta: { backgroundColor: colores.blanco, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colores.borde },
+  mesFila: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  mes: { fontSize: 20, fontWeight: "800", color: colores.indigo },
   anio: { fontWeight: "500", color: colores.textoSuave },
-  controles: { flexDirection: "row", alignItems: "center", gap: 14 },
-  hoy: { color: colores.acento, fontWeight: "700", fontSize: 15 },
+  controles: { flexDirection: "row", alignItems: "center", gap: 8 },
+  flecha: {
+    width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(15,23,42,0.06)",
+  },
 
   semana: { flexDirection: "row", marginBottom: 6 },
-  diaSemana: { flex: 1, textAlign: "center", color: colores.textoSuave, fontWeight: "600", fontSize: 12 },
+  diaSemana: { flex: 1, textAlign: "center", color: colores.textoPlaceholder, fontWeight: "700", fontSize: 12 },
 
   grilla: { flexDirection: "row", flexWrap: "wrap" },
-  celda: { width: `${100 / 7}%`, alignItems: "center", paddingVertical: 3 },
-  numero: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  numeroHoy: { backgroundColor: colores.acento },
-  numeroElegido: { backgroundColor: colores.indigo },
-  numeroTexto: { fontSize: 16, color: colores.indigo, fontWeight: "500" },
+  celda: { width: `${100 / 7}%`, alignItems: "center", paddingVertical: 2 },
+  numero: {
+    width: 40, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "transparent",
+  },
+  numeroConEventos: { backgroundColor: colores.acentoSuave, borderColor: "rgba(239,128,108,0.35)" },
+  numeroHoy: { backgroundColor: colores.acento, borderColor: colores.acento },
+  numeroElegido: { borderColor: colores.indigo, borderWidth: 2 },
+  numeroTexto: { fontSize: 15, color: colores.indigo, fontWeight: "500" },
   numeroTextoHoy: { color: colores.blanco, fontWeight: "800" },
-  numeroTextoElegido: { color: colores.blanco, fontWeight: "800" },
-  puntos: { flexDirection: "row", gap: 3, height: 6, marginTop: 2 },
+  puntos: { flexDirection: "row", gap: 3, height: 6, marginTop: 3 },
   punto: { width: 6, height: 6, borderRadius: 3 },
 
-  leyenda: { flexDirection: "row", gap: 18, marginTop: 8 },
+  leyenda: { flexDirection: "row", gap: 18, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderColor: colores.borde },
   leyendaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   leyendaTexto: { color: colores.textoSuave, fontSize: 12 },
 
-  seccion: { fontSize: 18, fontWeight: "800", color: colores.indigo, marginTop: 22, marginBottom: 10 },
+  seccionFila: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, marginBottom: 10 },
+  seccion: { fontSize: 18, fontWeight: "800", color: colores.indigo },
+  verMes: { color: colores.acento, fontWeight: "700", fontSize: 13 },
 
   fila: {
     flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colores.blanco,
     borderRadius: radios.tarjeta, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: colores.borde,
   },
-  miniatura: { width: 64, height: 48, borderRadius: 8, overflow: "hidden", backgroundColor: colores.indigo, alignItems: "center", justifyContent: "center" },
+  miniatura: { width: 64, height: 64, borderRadius: 10, overflow: "hidden", backgroundColor: colores.indigo, alignItems: "center", justifyContent: "center" },
   foto: { width: "100%", height: "100%" },
   filaTextos: { flex: 1 },
-  filaNombre: { fontWeight: "700", color: colores.indigo, fontSize: 15 },
+  filaNombre: { fontWeight: "800", color: colores.indigo, fontSize: 15 },
   filaFecha: { color: colores.textoSuave, fontSize: 13, marginTop: 2 },
-  etiqueta: { backgroundColor: colores.acentoSuave, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  etiquetaFavorito: { backgroundColor: "#F1F5F9" },
-  etiquetaTexto: { color: colores.acento, fontSize: 11, fontWeight: "700" },
-  etiquetaTextoFavorito: { color: colores.textoSuave },
+  filaLugar: { color: colores.textoPlaceholder, fontSize: 12, marginTop: 1 },
+  etiqueta: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1 },
+  etiquetaEntrada: { backgroundColor: "rgba(239,128,108,0.10)", borderColor: "rgba(239,128,108,0.35)" },
+  etiquetaFavorito: { backgroundColor: "rgba(37,99,235,0.08)", borderColor: "rgba(37,99,235,0.3)" },
+  etiquetaTexto: { fontSize: 11, fontWeight: "700" },
 
   vacio: { alignItems: "center", gap: 8, marginTop: 20 },
   vacioTexto: { color: colores.textoSuave, textAlign: "center" },

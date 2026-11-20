@@ -12,7 +12,7 @@ const TarjetaRoutes = require("./routes/TarjetaRoutes");
 const NotificacionRoutes = require("./routes/NotificacionRoutes");
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "3mb" })); // las fotos de perfil viajan en base64
 
 app.use("/auth", AuthRoutes);
 app.use("/eventos", EventoRoutes);

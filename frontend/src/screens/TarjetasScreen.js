@@ -1,3 +1,4 @@
+import { useRefrescar } from "../refrescar";
 import { alerta } from "../dialogo";
 import { useCallback, useState } from "react";
 import {
@@ -16,6 +17,8 @@ export default function TarjetasScreen({ navigation }) {
     () => get("/tarjetas").then(setTarjetas).catch((e) => setError(e.message)),
     []
   );
+
+  const { refrescando, onRefresh } = useRefrescar(cargar);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,6 +50,8 @@ export default function TarjetasScreen({ navigation }) {
     <FlatList
       style={styles.fondo}
       data={tarjetas}
+      refreshing={refrescando}
+      onRefresh={onRefresh}
       keyExtractor={(t) => String(t.id)}
       contentContainerStyle={styles.lista}
       ListEmptyComponent={

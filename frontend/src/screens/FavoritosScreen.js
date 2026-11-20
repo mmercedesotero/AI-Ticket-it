@@ -1,3 +1,4 @@
+import { useRefrescar } from "../refrescar";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useEventos } from "../eventos";
@@ -6,12 +7,15 @@ import { colores } from "../tema";
 
 export default function FavoritosScreen({ navigation }) {
   // Los favoritos vienen del almacén global: tocar el corazón acá lo saca de la lista al instante.
-  const { favoritos, alternarFavorito } = useEventos();
+  const { favoritos, alternarFavorito, recargar } = useEventos();
+  const { refrescando, onRefresh } = useRefrescar(recargar);
 
   return (
     <FlatList
       style={styles.fondo}
       data={favoritos}
+      refreshing={refrescando}
+      onRefresh={onRefresh}
       keyExtractor={(evento) => String(evento.id)}
       contentContainerStyle={styles.lista}
       showsVerticalScrollIndicator={false}

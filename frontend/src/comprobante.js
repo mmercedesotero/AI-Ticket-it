@@ -78,7 +78,7 @@ const ESTILOS = `
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #0F172A; padding: 24px; }
   .cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .logo { font-size: 24px; font-weight: 800; }
-  .logo span { color: #16A34A; }
+  .logo span { color: #EF806C; }
   .titulo { color: #64748B; font-size: 13px; text-align: right; }
   .ticket { border: 2px solid #E2E8F0; border-radius: 18px; overflow: hidden; margin-bottom: 24px; page-break-inside: avoid; }
   .foto { width: 100%; height: 180px; object-fit: cover; display: block; }
@@ -92,7 +92,7 @@ const ESTILOS = `
   .corte { border-top: 2px dashed #CBD5E1; margin: 0 18px; }
   .pie { display: flex; align-items: center; gap: 24px; padding: 18px 20px; }
   .qr svg { width: 150px; height: 150px; }
-  .estado { display: inline-block; background: #16A34A; color: #fff; font-weight: 700; border-radius: 10px; padding: 3px 10px; font-size: 12px; }
+  .estado { display: inline-block; background: #148C5E; color: #fff; font-weight: 700; border-radius: 10px; padding: 3px 10px; font-size: 12px; }
   .nota { color: #94A3B8; font-size: 11px; text-align: center; margin-top: 8px; }
 `;
 

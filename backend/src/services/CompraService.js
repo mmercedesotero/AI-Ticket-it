@@ -5,6 +5,8 @@ const EstadoCompra = require("../models/EstadoCompra");
 const Mensaje = require("../models/Mensaje");
 const ForbiddenError = require("../errors/ForbiddenError");
 
+const { HORAS_RESERVA, MS_POR_HORA, creadaEn } = require("../utils/reservas");
+
 class CompraService {
   constructor(compraRepository, usuarioRepository, eventoRepository, notificacionService) {
     this.notificacionService = notificacionService;
@@ -148,6 +150,8 @@ class CompraService {
     const usuario = this.usuarioRepository.findById(usuarioId);
     if (!usuario) throw new NotFoundError("Usuario no encontrado");
 
+    if (this.notificacionService) this.notificacionService.procesarReservas(usuario);
+
     return this.compraRepository
       .findAll()
       .filter((compra) => String(compra.comprador.id) === String(usuarioId))
@@ -204,6 +208,11 @@ class CompraService {
 
     if (compra.estado !== EstadoCompra.PENDIENTE_PAGO)
       throw new ValidationError("Solo se puede pagar una compra pendiente de pago");
+
+    if ((Date.now() - creadaEn(compra)) / MS_POR_HORA >= HORAS_RESERVA) {
+      if (this.notificacionService) this.notificacionService.procesarReservas(compra.comprador);
+      throw new ValidationError("La reserva venció: tenés que volver a elegir tus entradas");
+    }
 
     if (compra.evento.yaSeRealizo())
       throw new ValidationError(

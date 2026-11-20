@@ -8,8 +8,10 @@ import { imagenDe } from "../imagenes";
 // Si el evento no tiene foto, se muestra un ícono según su categoría.
 const ICONOS = {
   Recital: "musical-notes",
-  Teatro: "color-mask",
+  Teatro: "ribbon-outline",
   Festival: "sparkles",
+  Humor: "happy-outline",
+  Danza: "body-outline",
 };
 export const iconoDe = (evento) => ICONOS[evento.categoria?.nombre] ?? "calendar";
 

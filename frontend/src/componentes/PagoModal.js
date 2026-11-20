@@ -3,7 +3,7 @@ import { ActivityIndicator, Animated, Easing, Modal, Pressable, StyleSheet, Text
 import { Ionicons } from "@expo/vector-icons";
 import { colores, radios } from "../tema";
 
-const VERDE = "#12B76A";
+const VERDE = "#148C5E";
 
 // Pantalla completa del pago: "procesando" -> "exito" (se expande un círculo verde con el tilde) o "error".
 // estado: null (oculto) | "procesando" | "exito" | "error"

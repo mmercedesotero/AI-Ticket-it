@@ -8,7 +8,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { enviar } from "../api";
 import { alerta } from "../dialogo";
 import { useSesion } from "../sesion";
+import Avatar from "../componentes/Avatar";
+import Chip from "../componentes/Chip";
 import Logo from "../componentes/Logo";
+import { elegirFoto } from "../foto";
 import { colores, estilosBase, radios } from "../tema";
 
 const ROLES = [
@@ -25,6 +28,7 @@ export default function RegistroScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [verPassword, setVerPassword] = useState(false);
   const [acepta, setAcepta] = useState(false);
+  const [foto, setFoto] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
   const esOrganizador = rol === "ORGANIZADOR";
@@ -38,7 +42,7 @@ export default function RegistroScreen({ navigation }) {
     }
 
     // El comprador escribe su nombre completo; el servidor guarda nombre y apellido por separado.
-    let datos = { rol, nombre: nombre.trim(), email, password };
+    let datos = { rol, nombre: nombre.trim(), email, password, foto };
     if (!esOrganizador) {
       const partes = nombre.trim().split(/\s+/);
       if (partes.length < 2) {
@@ -57,11 +61,7 @@ export default function RegistroScreen({ navigation }) {
     }
   };
 
-  const verTerminos = () =>
-    alerta(
-      "Términos y Condiciones",
-      "Esta es una app de práctica: los pagos son simulados y los datos no se guardan de forma permanente."
-    );
+  const verTerminos = () => navigation.navigate("Terminos");
 
   return (
     <KeyboardAvoidingView style={styles.fondo} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -97,6 +97,31 @@ export default function RegistroScreen({ navigation }) {
               </Pressable>
             );
           })}
+        </View>
+
+        <View style={styles.fotoBloque}>
+          <Pressable
+            onPress={async () => {
+              const elegida = await elegirFoto();
+              if (elegida) setFoto(elegida);
+            }}
+          >
+            <Avatar foto={foto} nombre={nombre || "?"} tamano={88} color={colores.indigo} />
+            <View style={styles.camara}>
+              <Ionicons name="camera" size={14} color={colores.blanco} />
+            </View>
+          </Pressable>
+          <View style={styles.fotoAcciones}>
+            <Chip
+              etiqueta={foto ? "Cambiar foto" : "Agregar foto (opcional)"}
+              icono="image-outline"
+              onPress={async () => {
+                const elegida = await elegirFoto();
+                if (elegida) setFoto(elegida);
+              }}
+            />
+            {foto && <Chip etiqueta="Quitar" icono="trash-outline" onPress={() => setFoto(null)} />}
+          </View>
         </View>
 
         <Text style={styles.label}>{esOrganizador ? "Nombre de la productora" : "Nombre completo"}</Text>
@@ -172,6 +197,13 @@ export default function RegistroScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  fotoBloque: { alignItems: "center", marginBottom: 6 },
+  camara: {
+    position: "absolute", right: 0, bottom: 0, width: 28, height: 28, borderRadius: 14,
+    backgroundColor: colores.acento, alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: colores.fondo,
+  },
+  fotoAcciones: { flexDirection: "row", gap: 8, marginTop: 10 },
   fondo: { flex: 1, backgroundColor: colores.blanco },
   contenedor: { paddingHorizontal: 24, paddingBottom: 40 },
   volver: { alignSelf: "flex-start" },

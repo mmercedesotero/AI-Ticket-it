@@ -3,10 +3,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { get } from "../api";
+import { useSesion } from "../sesion";
 import { colores, radios } from "../tema";
 
 // Lista de tarjetas guardadas para elegir con qué pagar. La primera queda elegida por defecto.
 export default function SelectorTarjeta({ seleccionada, onSeleccionar, onAgregar }) {
+  const { sesion } = useSesion();
+  const pagoRapido = sesion.usuario.pagoRapido !== false;
   const [tarjetas, setTarjetas] = useState([]);
   const [cargada, setCargada] = useState(false);
 
@@ -17,7 +20,7 @@ export default function SelectorTarjeta({ seleccionada, onSeleccionar, onAgregar
           setTarjetas(lista);
           setCargada(true);
           const sigueExistiendo = lista.some((t) => t.id === seleccionada);
-          if (!sigueExistiendo) onSeleccionar(lista.length > 0 ? lista[0].id : null);
+          if (!sigueExistiendo) onSeleccionar(pagoRapido && lista.length > 0 ? lista[0].id : null);
         })
         .catch(() => setCargada(true));
       // eslint-disable-next-line react-hooks/exhaustive-deps

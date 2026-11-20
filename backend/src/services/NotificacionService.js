@@ -1,6 +1,9 @@
 const Notificacion = require("../models/Notificacion");
 const NotFoundError = require("../errors/NotFoundError");
 
+const { HORAS_RESERVA, HORAS_AVISO, MS_POR_HORA, creadaEn } = require("../utils/reservas");
+const EstadoCompra = require("../models/EstadoCompra");
+
 class NotificacionService {
   constructor(notificacionRepository, compraRepository) {
     this.notificacionRepository = notificacionRepository;
@@ -26,6 +29,8 @@ class NotificacionService {
   generarRecordatorios(usuario) {
     if (!this.compraRepository) return;
 
+    this.procesarReservas(usuario);
+
     this.compraRepository
       .findAll()
       .filter((c) => String(c.comprador.id) === String(usuario.id) && c.estado === "CONFIRMADA")
@@ -47,6 +52,40 @@ class NotificacionService {
             titulo: "¡Tu evento es hoy!",
             mensaje: `Hoy es ${compra.evento.nombre}. Tené a mano el código QR de tu entrada.`,
             clave: `recordatorio-hoy-${compra.id}`,
+          });
+        }
+      });
+  }
+
+  // Reservas sin pagar: a las HORAS_AVISO se avisa que hay que abonar y a las HORAS_RESERVA se cancelan
+  // (las entradas vuelven a quedar disponibles). Se revisa al consultar, sin un proceso que corra por tiempo.
+  procesarReservas(usuario) {
+    if (!this.compraRepository) return;
+
+    const ahora = Date.now();
+
+    this.compraRepository
+      .findAll()
+      .filter((c) => String(c.comprador.id) === String(usuario.id) && c.estado === EstadoCompra.PENDIENTE_PAGO)
+      .forEach((compra) => {
+        const horas = (ahora - creadaEn(compra)) / MS_POR_HORA;
+
+        if (horas >= HORAS_RESERVA) {
+          compra.actualizarEstado(EstadoCompra.CANCELADA);
+          compra.tipoEntrada.cupoDisponible += compra.cantidad;
+          this.crear("COMPRADOR", usuario.id, {
+            tipo: "RESERVA_VENCIDA",
+            titulo: "Tu reserva venció",
+            mensaje: `No pagaste a tiempo tu reserva de ${compra.evento.nombre} y se canceló. Las entradas volvieron a estar disponibles.`,
+            clave: `reserva-vencida-${compra.id}`,
+          });
+        } else if (horas >= HORAS_AVISO) {
+          const restantes = Math.max(1, Math.ceil(HORAS_RESERVA - horas));
+          this.crear("COMPRADOR", usuario.id, {
+            tipo: "RECORDATORIO_PAGO",
+            titulo: "Recordá abonar tu entrada",
+            mensaje: `Tu reserva de ${compra.evento.nombre} vence en unas ${restantes} horas. Pagala desde Mis compras para no perder tus entradas.`,
+            clave: `recordatorio-pago-${compra.id}`,
           });
         }
       });
