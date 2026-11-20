@@ -47,6 +47,7 @@ La aplicación se ejecuta de forma local: el **backend** corre en la computadora
 - **Comprar:** elegir varios tipos de entrada a la vez, pagar con una tarjeta guardada o **reservar sin pagar** (la reserva dura 24 horas).
 - **Mis compras:** pestañas Activas y Pasadas, entrada con código QR, seguimiento del estado, cancelación, comprobante en PDF y chat con el organizador.
 - **Tarjetas:** guardar hasta 5 tarjetas, con validaciones y sin guardar nunca el número completo ni el CVV.
+- **Mensajes:** una bandeja con todas las conversaciones con los organizadores (último mensaje, hora y cuántos faltan leer). Cada mensaje nuevo genera un aviso a la otra persona, que al tocarlo abre el chat.
 - **Calendario:** el mes con las entradas y los favoritos marcados.
 - **Notificaciones:** compras, pagos, recordatorios ("tu evento es mañana"), reservas por vencer y novedades, agrupadas por fecha.
 - **Reseñas:** puntuar de 1 a 5 estrellas un evento al que se asistió.
@@ -56,8 +57,10 @@ La aplicación se ejecuta de forma local: el **backend** corre en la computadora
 - Panel con entradas vendidas, ingresos, eventos activos y calificación promedio.
 - Filtros por estado (próximos, finalizados) y chips (hoy y mañana, esta semana, agotándose, sin ventas).
 - Crear eventos con portada, categoría y varios tipos de entrada.
+- **Editar** un evento que todavía no se realizó (datos, portada, precios y cupos, y agregar tipos de entrada) y **eliminarlo**. Si cambia la fecha, se avisa a los compradores; si se elimina, se cancelan las compras activas y se reembolsan las pagadas.
 - Gestionar cada evento: ventas, cupo restante y listado de compradores con chat.
-- Notificaciones propias: mañana o hoy es tu evento, se está agotando, todavía no vendiste, nueva reseña.
+- Notificaciones propias: mañana o hoy es tu evento, se está agotando, todavía no vendiste, nueva reseña y mensajes nuevos de los compradores.
+- **Mensajes:** bandeja con los chats de todos sus eventos, con el contador de no leídos.
 
 ---
 
@@ -213,13 +216,14 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 ### Comprador (barra inferior: Eventos, Mis compras, Calendario, Notificaciones, Perfil)
 | Pantalla | Qué hace |
 |----------|----------|
-| **Eventos** | Inicio: buscador, categorías, favoritos y próximos eventos con orden por fecha, precio o puntaje. |
+| **Eventos** | Inicio: buscador, categorías, favoritos y próximos eventos con orden por fecha, precio o puntaje. Arriba a la derecha, el ícono de mensajes y la foto de perfil. |
 | **Detalle del evento** | Información, descripción, entradas disponibles, reseñas y botón de favorito. |
 | **Seleccionar entradas** | Cantidad por tipo de entrada, tarjeta, resumen, y los botones "Pagar" o "Reservar sin pagar". |
 | **Confirmar compra / Pago** | Hoja de confirmación y animación de pago aprobado o rechazado. |
 | **Mis compras** | Activas y Pasadas, con el estado de cada compra y cuánto falta para el evento o para que venza la reserva. |
 | **Entrada** | El ticket con código QR, historial de estados, chat, comprobante en PDF y cancelación. |
-| **Chat** | Conversación con el organizador de esa compra. |
+| **Mensajes** | Bandeja de chats: se abre desde el ícono de mensajes (arriba, junto a la foto en Eventos; en la cabecera del panel del organizador) o desde el Perfil. |
+| **Chat** | Conversación entre comprador y organizador, ligada a una compra. |
 | **Reseña** | Puntuar y comentar un evento ya utilizado. |
 | **Calendario** | Mes con las entradas y favoritos marcados, con filtros. |
 | **Notificaciones** | Avisos agrupados por Hoy, Esta semana y Anteriores, con filtros. |
@@ -233,8 +237,8 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 ### Organizador (barra inferior: Mis eventos, Calendario, Notificaciones, Perfil)
 | Pantalla | Qué hace |
 |----------|----------|
-| **Panel organizador** | Resumen de ventas, aviso de eventos de hoy o mañana, filtros y lista de eventos. |
-| **Crear evento** | Portada, nombre, fecha, descripción, categoría y tipos de entrada. |
+| **Panel organizador** | Resumen de ventas, aviso de eventos de hoy o mañana, filtros, lista de eventos (con Editar y Gestionar) y acceso a Mensajes. |
+| **Crear / Editar evento** | Portada, nombre, fecha, descripción, categoría y tipos de entrada. Al editar un evento existente también permite eliminarlo. |
 | **Gestionar evento** | Entradas vendidas, ingresos, cupo restante y compradores con acceso al chat. |
 | **Calendario, Notificaciones, Perfil** | Las mismas pantallas, adaptadas a los eventos del organizador. |
 
@@ -257,18 +261,20 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 | | `PUT /auth/password` · `DELETE /auth/cuenta` | Cambiar contraseña y eliminar la cuenta |
 | Eventos | `GET /eventos` | Listar con filtros: `texto`, `categoriaId`, `orden` (fecha, precio, puntaje) y `direccion` |
 | | `GET /eventos/:id` · `GET /eventos/:id/portada` | Detalle y portada del evento |
-| | `POST /eventos` · `PUT /eventos/:id` · `DELETE /eventos/:id` | Solo organizadores |
+| | `POST /eventos` · `PUT /eventos/:id` · `DELETE /eventos/:id` | Solo organizadores, y solo sobre sus propios eventos |
 | Categorías | `GET /categorias` | Listar categorías |
 | Compras | `GET /compras` | Las del comprador, o `?eventoId=` para el organizador dueño del evento |
 | | `POST /compras` | Comprar o reservar entradas (queda pendiente de pago) |
 | | `PUT /compras/:id/pagar` | Pagar con una tarjeta guardada |
 | | `PUT /compras/:id/cancelar` | Cancelar (reembolsa si ya estaba pagada) |
-| | `GET /compras/:id/mensajes` · `POST /compras/:id/mensajes` | Chat entre comprador y organizador |
+| | `GET /compras/chats` | Bandeja de chats de quien pregunta, con el último mensaje y los no leídos |
+| | `GET /compras/:id/mensajes` · `POST /compras/:id/mensajes` | Chat entre comprador y organizador (abrirlo lo marca como leído; escribir avisa a la otra persona) |
 | Reseñas | `GET /resenias` · `POST /resenias` | Listar y puntuar (solo con entrada utilizada) |
 | Favoritos | `GET /favoritos` · `POST /favoritos/:eventoId` · `DELETE /favoritos/:eventoId` | Eventos favoritos |
 | Tarjetas | `GET /tarjetas` · `POST /tarjetas` · `DELETE /tarjetas/:id` | Tarjetas guardadas |
 | Notificaciones | `GET /notificaciones` | Avisos de quien pregunta |
 | | `PUT /notificaciones/leidas` · `PUT /notificaciones/:id/leida` | Marcar como leídas |
+| Fotos | `GET /fotos/:rol/:id` | Foto de perfil de un comprador o logo de un organizador |
 | Usuarios / Organizadores | CRUD en `/usuarios` y `/organizadores` | Administración básica |
 
 ---
@@ -287,7 +293,11 @@ También se puede crear una cuenta nueva desde la pantalla de registro.
 
 **Recordatorios y avisos:** se generan al consultar las notificaciones, sin repetirse: "tu evento es mañana" y "es hoy" (comprador y organizador), reservas por vencer, "se está agotando" (quedan 20 entradas o menos) y "todavía no vendiste".
 
+**Mensajes:** cada compra tiene su chat entre el comprador y el organizador del evento. Al escribir se le crea un aviso a la otra persona ("Nuevo mensaje de Ana en Coldplay"); si ya tenía uno sin leer de ese chat se actualiza en vez de crear otro. Al abrir el chat, sus mensajes y el aviso quedan leídos.
+
 **Reseñas:** solo se puede puntuar un evento con una entrada utilizada, una vez por evento, de 1 a 5.
+
+**Editar y eliminar eventos:** solo el organizador dueño puede hacerlo y solo si el evento todavía no se realizó (los ya realizados quedan en el historial y en las reseñas). Al editar, los tipos de entrada existentes se modifican pero no se pueden quitar (podrían tener ventas) y se pueden agregar nuevos; si algo es inválido no se aplica ningún cambio. Si se cambia la fecha se avisa a quienes tienen entradas. Al eliminar, las compras pendientes se cancelan, las pagadas se reembolsan, se avisa a los compradores y el evento sale de los favoritos.
 
 **Cancelaciones:** no se puede cancelar una compra ya utilizada ni de un evento que ya se realizó; al cancelar vuelven los cupos.
 
@@ -327,12 +337,10 @@ Esta es una aplicación de práctica y algunas cosas están simplificadas a prop
 - **QR decorativo:** el código QR de la entrada se genera con los datos de la compra, pero no hay una pantalla para escanearlo y validarlo en el acceso.
 - **Recuperación de contraseña sin email:** el código se muestra en pantalla.
 - **Chat de soporte:** el botón "Chatear con soporte" avisa que no está disponible; el correo de soporte es de ejemplo.
-- **Eventos:** se pueden crear, pero la app no tiene pantalla para editarlos o eliminarlos (el backend sí tiene los endpoints).
 - **Una cuenta, un rol:** comprador y organizador son cuentas distintas; para cambiar de modo hay que cerrar sesión e ingresar con la otra.
 - **Compras por tipo de entrada:** al elegir varios tipos a la vez se crea una compra por cada tipo.
 - **Fotos:** las imágenes de perfil y de portada se guardan en memoria, comprimidas, y tienen un tope de peso. Las fotos de los eventos de prueba están en `packages/frontend/img/`.
 - **Fotos de perfil de prueba:** los compradores de prueba usan retratos de internet, por lo que necesitan conexión para verse (si no cargan, se muestra la inicial).
-- **Sin tests automáticos ni colección de Postman** en esta versión.
 
 ---
 
