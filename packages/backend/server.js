@@ -1,10 +1,11 @@
-const express = require("express");
-
 const app = require("./src/app");
 const cargarSeeds = require("./src/seeds");
+const { mensajeDeArranque } = require("./src/utils/red");
+
+const PUERTO = 3000;
 
 cargarSeeds();
 
-app.listen(3000, () => {
-  console.log("Servidor funcionando");
+app.listen(PUERTO, () => {
+  console.log(mensajeDeArranque(PUERTO));
 });

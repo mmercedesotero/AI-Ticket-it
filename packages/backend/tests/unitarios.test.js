@@ -212,3 +212,33 @@ describe("Qué datos salen en las respuestas", () => {
     assert.equal(perfil.eventos, undefined);
   });
 });
+
+describe("Aviso de arranque con la IP", () => {
+  const { direccionesLocales, mensajeDeArranque } = require("../src/utils/red");
+
+  const interfaces = {
+    Ethernet: [{ family: "IPv4", address: "192.168.56.1", internal: false }, { family: "IPv6", address: "fe80::1", internal: false }],
+    "Wi-Fi": [{ family: "IPv4", address: "192.168.2.104", internal: false }],
+    Loopback: [{ family: "IPv4", address: "127.0.0.1", internal: true }],
+  };
+
+  test("lista solo direcciones IPv4 externas y pone la wifi primero", () => {
+    const lista = direccionesLocales(interfaces);
+    assert.deepEqual(lista.map((d) => d.ip), ["192.168.2.104", "192.168.56.1"]);
+    assert.equal(lista[0].esWifi, true);
+    assert.equal(lista[1].esWifi, false);
+  });
+
+  test("el mensaje muestra la línea exacta que hay que pegar en la app y las otras direcciones", () => {
+    const mensaje = mensajeDeArranque(3000, direccionesLocales(interfaces));
+    assert.ok(mensaje.includes("Servidor funcionando en http://localhost:3000"));
+    assert.ok(mensaje.includes('export const API = "http://192.168.2.104:3000";'));
+    assert.ok(mensaje.includes("packages/frontend/src/api.js"));
+    assert.ok(mensaje.includes("http://192.168.56.1:3000"));
+  });
+
+  test("sin ninguna red, avisa en vez de romperse", () => {
+    const mensaje = mensajeDeArranque(3000, direccionesLocales({ Loopback: interfaces.Loopback }));
+    assert.ok(mensaje.includes("No se encontró ninguna red"));
+  });
+});

@@ -113,7 +113,7 @@ AI-Ticket-It/
         ├── app.json             configuración de Expo
         ├── img/                 fotos de los eventos de prueba
         └── src/
-            ├── api.js           ⚠ acá se configura la IP del backend
+            ├── api.js           ⚠ acá se pone la IP del backend (ver "Paso 2")
             ├── tema.js          colores y medidas de toda la app
             ├── screens/         una pantalla por archivo
             ├── componentes/     piezas reutilizables (tarjetas, chips, avisos...)
@@ -141,20 +141,31 @@ npm run dev
 
 Con `npm run dev` el servidor se reinicia solo al guardar un archivo (usa nodemon). Para correrlo normal: `npm start`.
 
-Cuando funciona, la consola muestra `Servidor funcionando` y la API queda en `http://localhost:3000`. Al arrancar se cargan los [datos de prueba](#6-cuentas-de-prueba).
+Cuando funciona, la consola muestra `Servidor funcionando` y la API queda en `http://localhost:3000`. Además te dice qué IP poner en la app (ver el Paso 2). Al arrancar se cargan los [datos de prueba](#6-cuentas-de-prueba).
 
-### Paso 2: configurar la IP del backend en la app ⚠
+### Paso 2: poner la IP del backend en la app ⚠
 
-El celular **no puede** usar `localhost` para llegar al backend: `localhost` sería el propio celular. Tiene que usar la **IP de tu computadora en la red wifi**.
+Este paso es **obligatorio**: sin él la app no puede hablar con el backend y al intentar ingresar muestra el aviso *"Falta configurar la IP del backend"*.
 
-1. Averiguá tu IP:
-   - **Windows:** abrí una terminal y ejecutá `ipconfig`. Buscá "Dirección IPv4" del adaptador de wifi (por ejemplo `192.168.1.35`).
-   - **Mac / Linux:** `ifconfig` o `ip addr`.
-2. Abrí [`packages/frontend/src/api.js`](packages/frontend/src/api.js) y cambiá la primera línea:
+El celular **no puede** usar `localhost` para llegar al backend: `localhost` sería el propio celular. Tiene que usar la **IP de tu computadora en la red wifi**. Quien clone el proyecto desde `main` tiene que poner **su propia IP**:
 
-```js
-export const API = "http://TU-IP-ACÁ:3000";   // ejemplo: "http://192.168.1.35:3000"
-```
+1. **Averiguá tu IP.** La forma más fácil: al levantar el backend (Paso 1), la terminal te muestra la línea exacta para pegar:
+
+   ```
+   Para usar la app en el celular, abrí packages/frontend/src/api.js y poné esta dirección:
+
+       export const API = "http://192.168.1.35:3000";
+   ```
+
+   También se puede ver a mano: en **Windows**, `ipconfig` y buscá "Dirección IPv4" del adaptador de wifi; en **Mac / Linux**, `ifconfig` o `ip addr`.
+
+2. **Abrí [`packages/frontend/src/api.js`](packages/frontend/src/api.js)** y reemplazá `TU-IP-AQUI` por esa IP:
+
+   ```js
+   export const API = "http://192.168.1.35:3000";   // antes: "http://TU-IP-AQUI:3000"
+   ```
+
+3. Guardá el archivo. La computadora y el celular tienen que estar **en la misma wifi**.
 
 Si tu IP cambia (por ejemplo al conectarte a otra red), hay que volver a cambiarla.
 
@@ -179,7 +190,7 @@ cd packages/backend
 npm test
 ```
 
-Son más de 200 tests (221) y tardan unos 20 segundos. Cubren:
+Son más de 200 tests (224) y tardan unos 20 segundos. Cubren:
 
 | Archivo | Qué prueba |
 |---------|-----------|
@@ -229,7 +240,8 @@ npx newman run packages/backend/postman/AI-Ticket-It.postman_collection.json
 
 | Problema | Qué probar |
 |----------|-----------|
-| La app dice "Network request failed" o no carga nada | Revisá que la IP de `api.js` sea la correcta, que el backend esté corriendo y que ambos estén en la misma wifi. |
+| La app dice "Falta configurar la IP del backend" | No se hizo el Paso 2: cambiá `TU-IP-AQUI` por tu IP en `packages/frontend/src/api.js`. |
+| La app dice "Network request failed" o no carga nada | Revisá que el backend esté corriendo (`npm start` en `packages/backend`), que la IP de `api.js` sea la que muestra el backend al arrancar y que la compu y el celular estén en la misma wifi. |
 | Sigue sin conectar | El firewall de Windows puede estar bloqueando el puerto 3000. Permití a Node.js en redes privadas. |
 | Los cambios no se ven | Cerrá Expo Go y volvé a abrirlo, o ejecutá `npx expo start -c`. |
 | Se perdieron las cuentas o eventos que creaste | Es normal: los datos están en memoria y se reinician con el servidor. Ver [limitaciones](#11-limitaciones-conocidas). |
@@ -392,7 +404,7 @@ Todos los colores y medidas están en un solo archivo, [`packages/frontend/src/t
 Esta es una aplicación de práctica y algunas cosas están simplificadas a propósito:
 
 - **Persistencia en memoria:** todo lo que se crea (cuentas, eventos, compras, tarjetas, fotos, reseñas) vive en la memoria del servidor y **se pierde al reiniciarlo**, volviendo a los datos de prueba. Con `npm run dev` el servidor se reinicia cada vez que se guarda un archivo del backend. La app tampoco recuerda la sesión: al cerrarla hay que volver a ingresar.
-- **IP configurada a mano:** la dirección del backend se cambia manualmente en `api.js`.
+- **IP configurada a mano:** la dirección del backend se cambia manualmente en `api.js` (el backend muestra al arrancar la línea que hay que pegar).
 - **Pagos simulados:** no hay una pasarela de pago real.
 - **QR decorativo:** el código QR de la entrada se genera con los datos de la compra, pero no hay una pantalla para escanearlo y validarlo en el acceso.
 - **Recuperación de contraseña sin email:** el código se muestra en pantalla.
